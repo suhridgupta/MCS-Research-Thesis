@@ -7,7 +7,40 @@
 \chapter{\chaptertitle}
 \label{ch:background}
 
-In this chapter, a brief overview of microservice architectures is provided in section \ref{sec:micro-svc-arc}. This includes a brief description of the architecture of Kubernetes, along with its scheduling and autoscaling algorithms. Finally, section \ref{sec:lit-review} comprises of a detailed literature review of the state-of-the-art autoscaling algorithms and a comparison of their performances and drawbacks.
+In this chapter, a brief introduction to Service Level Agreements is provided in section \ref{sec:sla}, followed by an overview of microservice architectures is provided in section \ref{sec:micro-svc-arc}. This includes a brief description of the architecture of Kubernetes, along with its scheduling and autoscaling algorithms. Finally, section \ref{sec:lit-review} comprises of a detailed literature review of the state-of-the-art autoscaling algorithms and a comparison of their performances and drawbacks.
+
+\section{Service Level Agreements}
+\label{sec:sla}
+
+Cloud computing generally exposes resource using a pay-as-you-go service. These lucrative plans have led to the implementation of applications and hardwares being delivered as Software as a Service (SaaS) and Infrastructure as a Service (IaaS) respectively. However, consumers of such services have demands which may vary significantly, and it is impossible to fulfill all these expectations. Thus a balance needed to be struck in order to commit to an agreement \cite{patel2009service}. \par
+This commitment is known as a Service Level Agreement (SLA). This SLA defines the expected services provided by the provider, and agreed to by the consumer. The most common metric by which SLAs are negotiated between providers and consumers is the availability of service.
+
+\subsection{Availability of Services}
+\label{subsec:svc-availability}
+Availability is defined to ensure that the functional performance of the edge deployment is maintained for an agreed period. SLAs mostly define either monthly or yearly downtime in order to compute service credits for billing purposes \cite{mirobi2015service}. The downtime can be calculated using the formulae:
+%TC:ignore
+\[ downtime_{monthly} = \frac{100 - Availability\%}{100} * 30 * 24 \]
+\[ downtime_{yearly} = \frac{100 - Availability\%}{100} * 365 \]
+%TC:endignore
+Table \ref{table:sla-availability} shows the expected down-times for several SLA availability percentages.
+
+%TC:ignore
+\begin{table}
+    \caption{Summary of SLA availability}\label{table:sla-availability}
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        Availability \% & Monthly Downtime & Yearly Downtime\\
+        \hline
+        90\% & 72 hours & 36.5 days\\
+        99\% & 7.2 hours & 3.65 days\\
+        99.9\% & 43.8 minutes & 8.76 hours\\
+        99.99\% & 4.38 minutes & 52.56 minutes\\
+        99.999\% & 25.9 seconds & 5.26 minutes\\
+        \hline
+    \end{tabular}
+\end{table}
+%TC:endignore
 
 \section{Microservice Architecture}
 \label{sec:micro-svc-arc}
@@ -92,3 +125,92 @@ For custom metric autoscaling, the autoscaler must be configured in a way where 
 
 \section{Literature Review}
 \label{sec:lit-review}
+
+\subsection{Edge Computing Issues and Challenges}
+\label{subsec:edge-issues}
+
+\subsubsection{Resource Allocation}
+\label{subsubsec:edge-resource-alloc}
+
+Cao et al. \cite{cao2020overview} demonstrated the key differentiations traditional cloud computing architectures have compared to edge architectures, while asserting that edge deployments remain an extension of the cloud. The aim of cloud computing infrastructures is to process huge amounts of data from multi-regional zones, or in the best case, globally. This is done so as to perform in-depth analysis in diverse fields such as health-care, robotics, and business decision making. Traditionally, they also dealt with non-real-time data for decision-making \cite{premsankar2018edge}. On the other hand, edge computing usually handles smaller scale data, locally clustered and isolated in separate zones, and highly real-time in nature \cite{mishra2020early}. The data processed in traditional cloud computing environments are also generally done using a high network bandwidth. This is due to the large distances data needs to be transmitted over to reach the data centres and cloud servers. Such data transmission places an enormous burden on the cloud network, and poses multiple security challenges in ensuring that the data is not compromised in transit.\par
+
+The real-time nature of edge computing applications necessitates a method of resource allocation which ensures minimal cost of deployment, and maximum efficiency in terms of performance. As mentioned in section \ref{sec:edge-arch}, micro-service container orchestration technologies are leveraged to achieve these aims. Kristiani et al. \cite{kristiani2019} demonstrated an edge computing architecture, where the edge layer consists of Kubernetes nodes. Such a deployment increases the scalability, as well as maintains the ease of deployment, upgrade, and removal of nodes in the edge layer. Scaling of resources through the means of autoscaling depending on the resource requirements is crucial to the architecture's performance. Default solutions such as the inbuilt autoscaler provided by Kubernetes, while generally useful for cloud applications, are unsuitable for edge architectures according to Phan et al. \cite{phan2022traffic}. They note that due to the algorithm's default nature to allocate resources in a round-robin manner, they do not take into account which Kubernetes nodes require resources the most, violating edge architecture paradigms.
+
+\subsubsection{Service Level Agreements}
+\label{subsubsec:sla-edge}
+
+There are several challenges posed in providing SLA guarantees in an edge deployment:
+\begin{itemize}
+    \item Users queueing for large periods of time to use a service \cite{venticinque2011cloud}
+    \item Degradation of application performance due to peak levels of workload, leading to user dissatisfaction \cite{sakr2012sla}
+    \item Incorrect resources being allocated to the application, leading to either a degradation of availability, or large cost of application deployment \cite{houlihan2014auditing}
+\end{itemize}
+
+Several strategies have been proposed to counteract these challenges. Linlin et al. \cite{wu2013sla} proposed a customer-driven strategy  to minimize the provisioning costs. The algorithm considers the customer profiles as well as cloud providers' quality parameters such as response time to dynamically handle customer requests. Rajkumar et al. \cite{rajavel2012achieving} proposed a solution for alleviating the issue of delay in service allocation to users through the use of a novel hierarchical scheduling algorithm. This algorithm increases the performance of the scheduling algorithm, thus reducing the wastage of resources, and minimizing wait times. Sakr et al. \cite{sakr2012sla} introduced a novel approach to combat application performance degradation by using a middleware between consumers and the cloud. This middleware helps to facilitate dynamic provisioning of cloud databases based on consumer requirements, tailoring their needs and requirements to mitigate peak usages being hit often.
+
+\subsection{Resource Management and Scheduling Solutions}
+\label{subsec:resource-schedule-solutions}
+
+To counteract the limitations discussed in section \ref{subsubsec:edge-resource-alloc}, several custom scheduling and resource management algorithms have been proposed for edge architectures.\par
+
+Skarlat et al. \cite{skarlat2016resource} demonstrated an algorithm for resource scheduling where the usage of resources was formalized as an optimization problem. Thus, the authors attempted to minimize the network delay when requesting computational resources. Based on this work, Aazam and Huh \cite{aazam2015dynamic} proposed another solution for resource management which attempted to estimate the resources per service required, based on the user's previous behaviour as well as type of service being requested. By following such an approach, the resource wastage was actively reduced in edge nodes. Another resource allocation solution provided by Ni et al. \cite{ni2017resource} was based on priced timed Petri nets. The resources in the edge nodes are divided into several groups. The users can then select resources as per their requirements in an autonomous manner according to the price and time-cost of the operation.\par
+
+Based on these initial proposals, Nguyen et al. \cite{nguyen2020elasticfog} revealed ElasticFog, a resource provisioning algorithm which operates on top of the Kubernetes architecture. The algorithm provides real-time elastic scheduling for the resources on the edge nodes by monitoring the traffic distribution on the network, thereby achieving a significantly higher throughput and network efficiency in comparison to the default Kubernetes scheduler solution.\par
+
+Wojciechowski et al. \cite{wojciechowski2021netmarks} proposed a similar extension to the Kubernetes scheduler which deployed traffic-aware provisioning of resources. The extension worked alongside the Istio Service Mesh \footnote{\url{https://istio.io/latest/about/service-mesh/}} to collect dynamic network metrics for the scheduling of resources. The algorithm was shown to have highly efficient uses for edge deployments such as the 5G network.\par
+
+While these proposals improved the scheduling and resource provisioning of edge deployments, they did not address key limitations addressed above such as the need for dynamic resource scaling so as to face the challenges of real-time data processing and SLA compliance. Due to these issues, several autoscaling algorithms were proposed to address them.
+
+\subsection{Reactive Autoscaling Solutions}
+\label{subsec:reactive-solutions}
+
+Nunes et al. \cite{nunes2021state} stated that horizontal pod autoscaling using a reactive strategy remains the most popular autoscaling technique, as well as research topic. These strategies, despite having limitations such as a reliance on predetermined resource thresholds and a delay in resource scaling, have been popular in research articles.  Dogani et al. \cite{dogani2023auto} stated that this was due to the simplicity and user-friendliness in developing them. Table \ref{tab:reactive-autoscalers} summarizes the reactive autoscaling algorithms discussed below:\par
+
+Kampars and Pinka \cite{kampars2017auto} proposed a reactive autoscaling algorithm for edge architectures based on open-source technologies. The algorithm scales in a non-standard approach, considering real-time adjustments in the application logic to determine the strategy of scaling, resulting in several improvements in performance.\par
+
+Zhang et al. \cite{zhang2019quantifying} presented an algorithm for determining edge elasticity through container-based autoscaling. The authors posit that elasticity is a key factor of how an edge deployment as well as the lightweight containers which make up the edge layer perform. The framework not only autoscales container resources, but also monitors resource usage. They were able to show experimentally that to balance system stability with a decent elasticity required careful tuning of parameters such as the cooldown periods of scaling. \par
+\suhrid{Use this justification in my experimental HPA cooldown}
+
+Srirama et al. \cite{srirama2020application} investigated an container-aware autoscaling solution which deploys applications to containers which it deems ``best-fit''. The algorithm also uses a rule-based policy to minimize the deployment time, thus mitigating the issue of cold-start. Finally, a dynamic bin-packing sub-algorithm ensures that the applications are deployed on the least required physical servers, thus minimizing wastage of computing resources. The authors experimentally demonstrated that this algorithm minimized  the processing time, cost, and resource utilization.\par
+\suhrid{Perhaps explain cold start somewhere in the background?}
+
+Hoenisch et al. \cite{hoenisch2015four} implemented a four-fold autoscaling strategy for containerised applications which asks if the containers or servers can be autoscaled horizontally or vertically. This question is formalized as a multi-objective optimization problem, and the approach used reduced the cost of each request by more than 20\%.\par
+
+Santos et al. \cite{santos2020qoe} implemented a quality of experience based autoscaling of containerized edge deployments. The algorithm can autoscale both horizontally and vertically on a set of quality metrics which can be customized by the end-user.\par
+
+Sheganaku et al. \cite{sheganaku2023cost} devised an container-based autoscaling solution which allocates resources in a four-fold manner similar to Hoenisch et al. \cite{hoenisch2015four}. The authors formulated the problem as a multi-objective optimization problem and applied a Mixed-Integer Linear Programming (MILP) approach to allocate resources to containers. Such an approach demonstratively reduced costs while maintaining SLA constraints.\par
+
+Taherizadeh and Stankovski \cite{taherizadeh2019dynamic} proposed a multi-leve autoscaling solution using a rule-based approach. The algorithm uses dynamically changing thresholds based on both the container infrastructure as well as application, resulting in improvied performance as compared to other reactive approaches.\par
+
+%TC:ignore
+\afterpage{
+\begin{longtable}{|m{2em} | m{5em} | m{4em} | m{6em} | m{9em} | m{9em}|}
+\caption{Summary of reactive autoscaling solutions}\label{tab:reactive-autoscalers}
+\hline
+Ref & Technique & Scaling Metrics & Application & Contribution & Limitation\\
+\hline
+\cite{kampars2017auto} & Control theory & CPU / Memory & Streaming applications & Low / high level metrics integration & Complex and challenging metric selection and integration \\
+\hline
+\cite{zhang2019quantifying} & Rule-based & CPU & Website UI & Automated autoscaling for container-based edge environments & Delay in scaling resources\\
+\hline
+\cite{srirama2020application} & Rule-based & CPU / Memory & Microservice applications & Heuristic autoscaling algorithm for microservice deployments & Complex and user-intensive parameter tuning\\
+\hline
+\cite{hoenisch2015four} & Multi-objective optimization & CPU / Memory & Microservice applications & Solves the four-fold optimization problem & Heavy performance and resource overhead when running in edge deployments\\
+\hline
+\cite{santos2020qoe} & MILP & QoE Metrics & Microservice applications & Algorithm that maximizes resource utilization at the lowest cost & Unable to scale well on highly dynamic workloads\\
+\hline
+\cite{sheganaku2023cost} & MILP & CPU / Memory / QoE Metrics & Microservice applications & Cost-effective autoscaling solution using linear programming & Too time consuming and computationally expensive for edge deployments\\
+\hline
+\cite{taherizadeh2019dynamic} & Rule-based & CPU / Memory & Simulation & Multi-level autoscaling, leveraging monitoring and dynamic thresholds for better performance & Costly to optimize\\
+\hline
+\end{longtable}
+}
+%TC:endignore
+
+\subsection{Machine Learning for Proactive Autoscaling}
+
+\subsection{Proactive Autoscaling Solutions}
+
+%\begin{tikzpicture}
+%    \draw (0,0) rectangle (6,1) node[midway] {SLA in Edge Computing};
+%\end{tikzpicture}

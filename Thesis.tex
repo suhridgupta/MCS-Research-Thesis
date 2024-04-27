@@ -72,12 +72,20 @@
   }
 }
 
+\usepackage{afterpage}
+\usepackage{longtable}
+
 \graphicspath{{figures/}}
 \def\datapath{data}
 
 \begin{document}
 
 \frontmatter
+%TC:macro \suhrid [ignore]
+\newcommand{\suhrid}[1]{\textcolor{blue}{\textsc{Suhrid:} \textbf{#1}}\par}
+
+%TC:macro \tawfiq [ignore]
+\newcommand{\tawfiq}[1]{\textcolor{red}{\textsc{Tawfiq:} #1}\par}
 
 %TC:ignore
 \university{{The University of Melbourne}}
