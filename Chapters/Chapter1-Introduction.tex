@@ -7,7 +7,9 @@
 \chapter{\chaptertitle}
 \label{ch:introduction}
 
-\section{Edge Computing Architecture}
+In this chapter, a brief overview of the edge computing architecture paradigm, along with its uses, benefits, and challenges with respect to resource scaling are provided in section \ref{sec:edge-arch}. These challenges lead to the research gap and questions this thesis intends to answer in section \ref{sec:problem-overview}.\par
+
+\section{Edge Computing Overview}
 \label{sec:edge-arch}
 
 Cloud computing architectures leverage the on-demand accessibility of the Internet. The cloud applications utilize the vast resources of the cloud to perform a task, and relinquish it once it is complete for the other sub-modules in the application to request \cite{rimal2009taxonomy}. In the early days, a singular end-point would be used to access these services, however nowadays the architecture is multi-regional allowing effortless access from across the world. This was achieved through the use of content delivery networks (CDN) located in several regions to allow for data to be quickly replicated and served to clients. This architecture model allows for the processing of large-scale data in a near real-time manner.\par
@@ -20,6 +22,7 @@ One method of mitigating this scaling latency is through the use of micro-servic
 The scaling of these microservice resources is done automatically through a process known as autoscaling. While most microservice applications come bundled with default autoscaling solutions, and these solutions are sufficient for most applications, they fall apart when scaling resources for time-sensitive services such as the ones used in healthcare require stringent compliance to service level agreements (SLA) on metrics such as application latency. This has led to further research on autoscaling solutions for edge computing applications. These primarily fall into two categories. Reactive autoscaling solutions attempt to modify the microservice resource allocation once the required resources exceeds the current allocation. These algorithms are simple to develop and deploy, however the time taken to scale resources leads to a degradation of resource availability and violates SLA compliance \cite{podolskiy2018iaas}. To counteract these pitfalls, proactive autoscaling solutions attempt to model the resource allocation over time and effectively predict the resource requirements. By doing so, the microservice resources can be scaled in advance through a process known as ``cold starting''. This approach removes the latency inherent in scaling resources, however the algorithms are extremely complex to develop, train as well as tune to specific edge applications \cite{straesser2022not}.
 
 \section{Problem Overview}
+\label{sec:problem-overview}
 
 With these limitations in mind, the object of this research project was to unify the reactive and proactive autoscaling solutions into a hybrid model. This solution combines the light weight, and ease of use and deployment of the reactive algorithm, with the SLA compliance and accurate resource modelling of proactive ones. The project aimed to answer the following questions in a satisfactory manner:
 \begin{itemize}

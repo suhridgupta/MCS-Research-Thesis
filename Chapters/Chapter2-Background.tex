@@ -12,7 +12,14 @@ In this chapter, a brief introduction to Service Level Agreements is provided in
 \section{Service Level Agreements}
 \label{sec:sla}
 
-Cloud computing generally exposes resource using a pay-as-you-go service. These lucrative plans have led to the implementation of applications and hardwares being delivered as Software as a Service (SaaS) and Infrastructure as a Service (IaaS) respectively. However, consumers of such services have demands which may vary significantly, and it is impossible to fulfill all these expectations. Thus a balance needed to be struck in order to commit to an agreement \cite{patel2009service}. \par
+\begin{figure}[htb]
+    \centering
+    \caption{Types of service level agreements}
+    \includegraphics[width=0.9\linewidth]{Figures/SLA-Cloud-Computing.png}
+    \label{fig:sla-types}
+\end{figure}
+
+Cloud computing generally exposes resource using a pay-as-you-go service. These lucrative plans have led to the implementation of applications and hardwares being delivered as Software as a Service (SaaS), Platform as a Service (PaaS), and Infrastructure as a Service (IaaS). However, consumers of such services have demands which may vary significantly, and it is impossible to fulfill all these expectations. Thus a balance needed to be struck in order to commit to an agreement \cite{patel2009service}. \par
 This commitment is known as a Service Level Agreement (SLA). This SLA defines the expected services provided by the provider, and agreed to by the consumer. The most common metric by which SLAs are negotiated between providers and consumers is the availability of service.
 
 \subsection{Availability of Services}
@@ -49,8 +56,8 @@ Microservice architectures involve decomposing an application into several loose
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=0.9\linewidth]{Figures/Container-Orchestration.png}
     \caption{Features of Container Orchestration}
+    \includegraphics[width=0.9\linewidth]{Figures/Container-Orchestration.png}
     \label{fig:container-orchestration}
 \end{figure}
 
@@ -68,8 +75,8 @@ Kubernetes \footnote{\url{https://kubernetes.io/}} is one of the most popular op
 The smallest unit of work in a Kubernetes deployment is known as a \textit{pod} \cite{baier2017getting}. This is a collection of containers sharing an IP address and port. In summary, microservice architectures are said to be containerized and deployed on Kubernetes in the form of pods \cite{vayghan2019kubernetes}.\par
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=0.5\linewidth]{Figures/K8s-Architecture.pdf}
     \caption{Kubernetes Architecture}
+    \includegraphics[width=0.5\linewidth]{Figures/K8s-Architecture.png}
     \label{fig:k8s-arch}
 \end{figure}
 
@@ -118,13 +125,15 @@ For custom metric autoscaling, the autoscaler must be configured in a way where 
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=.5\linewidth]{Figures/Custom-Metrics-Autoscaling.pdf}
     \caption{Custom Autoscaler Architecture Overview.}
+    \includegraphics[width=.7\linewidth]{Figures/Custom-Metrics-Autoscaling.png}
     \label{fig:custom-autoscale-overview}
 \end{figure}
 
 \section{Literature Review}
 \label{sec:lit-review}
+
+In this section, we discuss some of the common challenges and limitations inherent in an edge computing paradigm, before delving into the many attempts at mitigating them.
 
 \subsection{Edge Computing Issues and Challenges}
 \label{subsec:edge-issues}
@@ -135,6 +144,13 @@ For custom metric autoscaling, the autoscaler must be configured in a way where 
 Cao et al. \cite{cao2020overview} demonstrated the key differentiations traditional cloud computing architectures have compared to edge architectures, while asserting that edge deployments remain an extension of the cloud. The aim of cloud computing infrastructures is to process huge amounts of data from multi-regional zones, or in the best case, globally. This is done so as to perform in-depth analysis in diverse fields such as health-care, robotics, and business decision making. Traditionally, they also dealt with non-real-time data for decision-making \cite{premsankar2018edge}. On the other hand, edge computing usually handles smaller scale data, locally clustered and isolated in separate zones, and highly real-time in nature \cite{mishra2020early}. The data processed in traditional cloud computing environments are also generally done using a high network bandwidth. This is due to the large distances data needs to be transmitted over to reach the data centres and cloud servers. Such data transmission places an enormous burden on the cloud network, and poses multiple security challenges in ensuring that the data is not compromised in transit.\par
 
 The real-time nature of edge computing applications necessitates a method of resource allocation which ensures minimal cost of deployment, and maximum efficiency in terms of performance. As mentioned in section \ref{sec:edge-arch}, micro-service container orchestration technologies are leveraged to achieve these aims. Kristiani et al. \cite{kristiani2019} demonstrated an edge computing architecture, where the edge layer consists of Kubernetes nodes. Such a deployment increases the scalability, as well as maintains the ease of deployment, upgrade, and removal of nodes in the edge layer. Scaling of resources through the means of autoscaling depending on the resource requirements is crucial to the architecture's performance. Default solutions such as the inbuilt autoscaler provided by Kubernetes, while generally useful for cloud applications, are unsuitable for edge architectures according to Phan et al. \cite{phan2022traffic}. They note that due to the algorithm's default nature to allocate resources in a round-robin manner, they do not take into account which Kubernetes nodes require resources the most, violating edge architecture paradigms.
+
+\subsubsection{Cold start problem}
+\label{subsubsec:cold-start}
+
+To explain the cold start problem, we use the example of horizontal pod autoscaling in Kubernetes. When the control plane requests for a deployment to be scaled up, Kubernetes adds more pods to the dataplane nodes.  Based on the internal workload, the pod needs to be elastically scaled out \cite{beni2021reducing}. Even though the pod start up time is significantly quicker than, say, a traditional virtual machine, there is a latency inherent to bootstrapping the container, preparing the pod environment based on the deployment specification, and initialising the code present in the container image, and registering the pod in a ``ready'' state to the Kubernetes control plane. This latency inherent when scaling resources is known as the ``cold start''.\par
+
+Several techniques exist to reduce this cold start latency. The Kubernetes container runtime uses snapshots \cite{cadden2019seuss}, lazy fetching of container images \cite{lorenzo2019fogdocker}, and container queues \cite{lin2019mitigating}. However, these measures do not eliminate the issue of cold start. Due to this, researchers looked into scaling resources in a predictive manner, so as to ensure the microservice application has enough time to spool up resources before the actual demand comes in.\par
 
 \subsubsection{Service Level Agreements}
 \label{subsubsec:sla-edge}
@@ -169,10 +185,10 @@ Nunes et al. \cite{nunes2021state} stated that horizontal pod autoscaling using 
 Kampars and Pinka \cite{kampars2017auto} proposed a reactive autoscaling algorithm for edge architectures based on open-source technologies. The algorithm scales in a non-standard approach, considering real-time adjustments in the application logic to determine the strategy of scaling, resulting in several improvements in performance.\par
 
 Zhang et al. \cite{zhang2019quantifying} presented an algorithm for determining edge elasticity through container-based autoscaling. The authors posit that elasticity is a key factor of how an edge deployment as well as the lightweight containers which make up the edge layer perform. The framework not only autoscales container resources, but also monitors resource usage. They were able to show experimentally that to balance system stability with a decent elasticity required careful tuning of parameters such as the cooldown periods of scaling. \par
+
 \suhrid{Use this justification in my experimental HPA cooldown}
 
 Srirama et al. \cite{srirama2020application} investigated an container-aware autoscaling solution which deploys applications to containers which it deems ``best-fit''. The algorithm also uses a rule-based policy to minimize the deployment time, thus mitigating the issue of cold-start. Finally, a dynamic bin-packing sub-algorithm ensures that the applications are deployed on the least required physical servers, thus minimizing wastage of computing resources. The authors experimentally demonstrated that this algorithm minimized  the processing time, cost, and resource utilization.\par
-\suhrid{Perhaps explain cold start somewhere in the background?}
 
 Hoenisch et al. \cite{hoenisch2015four} implemented a four-fold autoscaling strategy for containerised applications which asks if the containers or servers can be autoscaled horizontally or vertically. This question is formalized as a multi-objective optimization problem, and the approach used reduced the cost of each request by more than 20\%.\par
 
@@ -182,34 +198,106 @@ Sheganaku et al. \cite{sheganaku2023cost} devised an container-based autoscaling
 
 Taherizadeh and Stankovski \cite{taherizadeh2019dynamic} proposed a multi-leve autoscaling solution using a rule-based approach. The algorithm uses dynamically changing thresholds based on both the container infrastructure as well as application, resulting in improvied performance as compared to other reactive approaches.\par
 
+Phan et al. \cite{phan2022traffic} proposed a reactive autoscaling solution for edge deployments for IoT devices which dynamically allocates resources based on incoming traffic. This traffic-aware horizontal pod autoscaler (THPA) operates on top of the underlying Kubernetes architecture. As discussed above, the default Kubernetes horizontal pod autoscaler scales resources in a round-robin manner, not taking into context which nodes are receiving the highest resource requests. THPA alleviates this issue by modelling the resource requests per Kubernetes nodes. It then intelligently allocates pods to the nodes with higher number of requests. The authors were able to experimentally demonstrate that following such an approach provided a 150\% improvement in response time and throughput.
+
+\suhrid{@Tawfiq what do you think of this table format? I am a bit worried it is too verbose, as that was one of the feedbacks I got in the research proposal. Do you think I should change the colums to simple ticks and crosses instead?}
+
 %TC:ignore
-\afterpage{
-\begin{longtable}{|m{2em} | m{5em} | m{4em} | m{6em} | m{9em} | m{9em}|}
+\begin{longtable}{|m{2em} | m{5em} | m{4em} | m{10em} | m{11em}|}
 \caption{Summary of reactive autoscaling solutions}\label{tab:reactive-autoscalers}
 \hline
-Ref & Technique & Scaling Metrics & Application & Contribution & Limitation\\
+Ref & Technique & Scaling Metrics & Contributions & Limitations\\
 \hline
-\cite{kampars2017auto} & Control theory & CPU / Memory & Streaming applications & Low / high level metrics integration & Complex and challenging metric selection and integration \\
+\cite{phan2022traffic} & Rule-based & I/O requests & Traffic aware reactive autoscaling based on which node receives resource requests & Not SLA compliant due to the delay in scaling resources\\
 \hline
-\cite{zhang2019quantifying} & Rule-based & CPU & Website UI & Automated autoscaling for container-based edge environments & Delay in scaling resources\\
+\cite{kampars2017auto} & Control theory & CPU / Memory & Low / high level metrics integration & Complex and challenging metric selection and integration \\
 \hline
-\cite{srirama2020application} & Rule-based & CPU / Memory & Microservice applications & Heuristic autoscaling algorithm for microservice deployments & Complex and user-intensive parameter tuning\\
+\cite{zhang2019quantifying} & Rule-based & CPU & Automated autoscaling for container-based edge environments & Delay in scaling resources\\
 \hline
-\cite{hoenisch2015four} & Multi-objective optimization & CPU / Memory & Microservice applications & Solves the four-fold optimization problem & Heavy performance and resource overhead when running in edge deployments\\
+\cite{srirama2020application} & Rule-based & CPU / Memory & Heuristic autoscaling algorithm for microservice deployments & Complex and user-intensive parameter tuning\\
 \hline
-\cite{santos2020qoe} & MILP & QoE Metrics & Microservice applications & Algorithm that maximizes resource utilization at the lowest cost & Unable to scale well on highly dynamic workloads\\
+\cite{hoenisch2015four} & Multi-objective optimization & CPU / Memory & Solves the four-fold optimization problem & Heavy performance and resource overhead when running in edge deployments\\
 \hline
-\cite{sheganaku2023cost} & MILP & CPU / Memory / QoE Metrics & Microservice applications & Cost-effective autoscaling solution using linear programming & Too time consuming and computationally expensive for edge deployments\\
+\cite{santos2020qoe} & MILP & QoE Metrics & Algorithm that maximizes resource utilization at the lowest cost & Unable to scale well on highly dynamic workloads\\
 \hline
-\cite{taherizadeh2019dynamic} & Rule-based & CPU / Memory & Simulation & Multi-level autoscaling, leveraging monitoring and dynamic thresholds for better performance & Costly to optimize\\
+\cite{sheganaku2023cost} & MILP & CPU / Memory / QoE Metrics & Cost-effective autoscaling solution using linear programming & Too time consuming and computationally expensive for edge deployments\\
+\hline
+\cite{taherizadeh2019dynamic} & Rule-based & CPU / Memory & Multi-level autoscaling, leveraging monitoring and dynamic thresholds for better performance & Costly to optimize\\
 \hline
 \end{longtable}
-}
 %TC:endignore
 
-\subsection{Machine Learning for Proactive Autoscaling}
-
 \subsection{Proactive Autoscaling Solutions}
+\label{subsec:proactive-solutions}
+
+Lorido et al. \cite{lorido2014review} showed that compared to reactive algorithms, proactive algorithms achieved better resource allocation once they had been carefully optimized. Machine learning (ML) techniques such as auto-regressive integrated moving averages (ARIMA) and long short-term memory (LSTM) have gained populary in time-series analysis due to their relative ease of building and efficiency compared to other ML models. Through the careful use of these models, linear patterns in the data can be automatically identified in a short amount of time with relatively constrained resources. There are however several challenges when implementing a proactive algorithm. Time-series analysis models may struggle when dealing with highly complex and non-linear data \cite{dogani2023auto}. The development of a generalised algorithm for several edge architectures remains a costly process. One of the biggest challenges is the initial lack of training data. Another issue is the exploding or vanishing gradient problem \cite{pascanu2013difficulty}, though modern algorithms ensure that they avoid this pitfall \cite{hochreiter2001gradient}. Despite these challenges, their application in scaling of resources with semi-predictable data series remain valuable. Table \ref{tab:proactive-autoscalers} summarizes the proactive autoscaling algorithms discussed below:\par
+
+Ju et al. \cite{ju2021proactive} presented a proactive horizontal pod autoscaling solution for edge computing paradigms. The algorithm, known as Proactive Pod Autoscaler (PPA) was designed to predict resource requests on multiple user-defined metrics, such as CPU request and I/O traffic requests. The algorithm does not use any specific machine learning model for the time-series analysis, instead the model is to be inputted by the user. This model agnostic architecture allows for a very high level of customization. The user can deploy an ARIMA, LSTM, or even Bayesian confidence models. In a confidence model, the autoscaler will only deploy resources if the confidence value is seen to be above a specified user-defined threshold. The authors validated their findings by testing the architecture using LSTM and ARIMA models, the results concluded that this algorithm significantly outperformed both the default Kubernetes autoscaler, as well as existing reactive autoscaling solutions.\par
+
+\suhrid{The research proposal lit review has a paragraph detailing how this algo works. Use that to describe the proactive part of my own hybrid architecture}
+
+Imdoukh et al. \cite{imdoukh2020machine} proposed a proactive autoscaling solution using an LSTM model, designed for edge computing architectures. The algorithm uses an LSTM neural network to predict future network traffic workload to determine the resources to assign to edge nodes ahead of time (cold-start). The authors experimentally demonstrated that their algorithm was as accurate as existing ARIMA-based proactive solutions, but theirs significantly reduced the prediction time, as well as computed the minimum resource allocation required to handle future workload.\par
+
+\suhrid{This paper has a good description of proactive architecture as well, may consider using this instead}
+
+Messias et al. \cite{messias2016combining} created a proactive autoscaler using genetic algorithms (GA). The genetic algorithm combines several time-series forecasting models, while having the benefit of not requiring a training phase as the model adapts to the incoming data. The experimental results concluded that this approach produces results comparable to several state-of-the-art proactive models, and can adapt to various time series models.\par
+
+Abdulla et al. \cite{abdullah2020burst} devised an autoscaling solution which is capable of detecting sudden bursts in dynamic workloads. The algorithm achieves this through a method of workload and resource prediction to make a scaling decision. Experimenting on several burst-heavy workloads, the autoscaler demonstrated significant improvements compared to other state-of-the-art methods.\par
+
+Alidoost et al. \cite{alidoost2023introducing} proposed a workload classification model using a Support Vector Machine (SVM). The algorithm extracts the user's workload characteristics, and then trains the SVM on it. The authors demonstrated a 10\% forecast error reduction compared to other machine learning proactive forecast approaches.\par
+
+%TC:ignore
+\begin{longtable}{|m{2em} | m{5em} | m{4em} | m{10em} | m{11em}|}
+\caption{Summary of proactive autoscaling solutions}\label{tab:proactive-autoscalers}
+\hline
+Ref & Technique & Scaling Metrics & Contributions & Limitations\\
+\hline
+\cite{ju2021proactive} & User-defined models & User-defined metrics & Fully customizable architecture with user-defined metrics and prediction model & Complex hyper-parameter tuning, lack of initial training data causes erroneous predictions\\
+\hline
+\cite{imdoukh2020machine} & LSTM & HTTP requests & Proactive autoscaler for edge architectures using an LSTM model & Initial lack of training data leads to erroneous predictions\\
+\hline
+\cite{messias2016combining} & GA & Response time & Genetic algorithm based proactive autoscaler with no training phase & High rate of initial errors due to GA randomness\\
+\hline
+\cite{abdullah2020burst} & XGBoost & CPU & Autoscaler capable of burst detection & Incapable of capturing several other workload patterns\\
+\hline
+\cite{alidoost2023introducing} & SVM & CPU & SVM based workload prediction model & Difficulty in identifying non-linear workload patterns\\
+\hline
+\end{longtable}
+%TC:endignore
+
+\subsection{Hybrid autoscaling solutions}
+\label{subsec:hybrid-solutions}
+
+All the approaches mentioned in sections \ref{subsec:reactive-solutions} and \ref{subsec:proactive-solutions} have their benefits and drawbacks. Thus, hybrid solutions which merge multiple autoscaling methods were proposed \cite{qu2018auto}. While hybrid algorithms for cloud-based deployments exist, integrating them into edge architectures pose several challenges due to the lower data storage and computational capacity of the edge layer. Furthermore, extracting the proactive time-series analysis to the cloud layer poses further challenges due to the inherent latency present between the two layers. Despite this, exploring these solutions provides a solid template for the approach used in this paper, table \ref{tab:hybrid-autoscalers} shows an overview of the proposals discussed below:\par
+
+In 2007, one of the first hybrid algorithms for a distributed deployment was proposed by Jing et al. \cite{xu2007use}. This algorithm combined rule-based fuzzy inference with machine learning forecasting for dynamic resource allocation. The authors experimentally verified their algorithm through a prototype to demonstrate that it can reduce the resource consumption on resource management systems compared to their default resource allocation algorithms.\par
+
+Based on this work, Lama and Zhou \cite{lama2009efficient} proposed a resource provisioning algorithm for multi-cluster set ups using a hybrid autoscaler. The autoscaler comprised of a combination of fixed fuzzy rule-based logic and a self adaptive algorithm which dynamically tuned the scaling factor. The authors tested this algorithm on a simulation to demonstrate performance benefits compared to existing approaches.\par
+
+A hybrid approach for cloud computing architectures was proposed by Ramp{\'e}rez et al. \cite{ramperez2021flas}. The algorithm which was called Forecasted Load Auto-scaling (FLAS), combines a predictive model for forecasting time-series resources, while the reactive model estimates other high-level metrics and delegates for the proactive model, reducing the potential forecast error when encountering previously unseen workloads. The approach was shown to demonstrate efficient resource allocation as compared to other state-of-the-art solutions.\par
+
+Finally, Biswas et al. \cite{biswas2017hybrid} presented a hybrid algorithm designed for cloud computing deployments with service level agreements. The proactive algorithm involves a machine-learning based approach using an SVM model, alongside the reactive algorithm to dynamically allocate resources. The algorithm was experimentally shown to perform better than a pure reactive or proactive solution in most cases.\par
+
+%TC:ignore
+\begin{longtable}{|m{2em} | m{5em} | m{4em} | m{10em} | m{11em}|}
+\caption{Summary of hybrid autoscaling solutions}\label{tab:hybrid-autoscalers}
+\hline
+Ref & Technique & Scaling Metrics & Contributions & Limitations\\
+\hline
+\cite{xu2007use} & Rule-based / ML model & HTTP requests & Novel approach combining both reactive and proactive solutions & Limited to a proof-of-concept\\
+\hline
+\cite{lama2009efficient} & Rule-based / Self-tuning component & CPU / Memory & Novel hybrid algorithm for cluster-based deployments & Not applicable to cloud deployments\\
+\hline
+\cite{ramperez2021flas} & Rule-based / Linear regression & CPU / Memory & Autoscaler designed for cloud based micro-service applications & Forecaster too simplistic to predict complex time-series\\
+\hline
+\cite{biswas2017hybrid} & Rule-based / SVM & SLA-metrics & Hybrid autoscaler for SLA-constrained cloud deployments & Forecasting model expensive to train, infeasible for edge deployments\\
+\hline\hline
+\multicolumn{5}{|c|}{Proposed Algorithm}\\
+\hline\hline
+\- & Rule-based / LSTM & CPU & Hybrid autoscaler for SLA-constrained edge deployments & \-\\
+\hline
+\end{longtable}
+%TC:endignore
 
 %\begin{tikzpicture}
 %    \draw (0,0) rectangle (6,1) node[midway] {SLA in Edge Computing};
