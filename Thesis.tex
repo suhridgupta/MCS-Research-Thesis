@@ -74,6 +74,9 @@
 
 \usepackage{afterpage}
 \usepackage{longtable}
+\usepackage{amssymb}% http://ctan.org/pkg/amssymb
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\usepackage{comment}
 
 \graphicspath{{figures/}}
 \def\datapath{data}
@@ -81,6 +84,9 @@
 \begin{document}
 
 \frontmatter
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
 %TC:macro \suhrid [ignore]
 \newcommand{\suhrid}[1]{\textcolor{blue}{\textsc{Suhrid:} \textbf{#1}}\par}
 
@@ -142,6 +148,7 @@
 
 \input{Chapters/Chapter1-Introduction.tex}
 \input{Chapters/Chapter2-Background.tex}
+\input{Chapters/Chapter3-Methodology}
 
 \addtocontents{toc}{\vspace{2em}}
 
