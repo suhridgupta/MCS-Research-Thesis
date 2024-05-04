@@ -245,6 +245,7 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
          Light-weight & \cmark & \cmark & \cmark & \cmark & \xmark & \xmark & \xmark & \cmark\\
          Edge architecture compliant & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark\\
          SLA-compliant & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
+         Maximizes app performance &  \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
          \hline
     \end{tabular}
 \end{table}
@@ -305,12 +306,13 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
          Light-weight &                 \xmark & \xmark & \cmark & \xmark & \xmark\\
          Edge architecture compliant &  \cmark & \xmark & \xmark & \xmark & \xmark\\
          SLA-compliant &                \xmark & \cmark & \cmark & \xmark & \xmark\\
+         Maximizes app performance &    \xmark & \cmark & \xmark & \xmark & \xmark\\
          \hline
     \end{tabular}
 \end{table}
 %TC:endignore
 
-\subsection{Hybrid autoscaling solutions}
+\subsection{Hybrid Autoscaling Solutions}
 \label{subsec:hybrid-solutions}
 
 All the approaches mentioned in sections \ref{subsec:reactive-solutions} and \ref{subsec:proactive-solutions} have their benefits and drawbacks. Thus, hybrid solutions which merge multiple autoscaling methods were proposed \cite{qu2018auto}. While hybrid algorithms for cloud-based deployments exist, integrating them into edge architectures pose several challenges due to the lower data storage and computational capacity of the edge layer. Furthermore, extracting the proactive time-series analysis to the cloud layer poses further challenges due to the inherent latency present between the two layers. Despite this, exploring these solutions provides a solid template for the approach used in this paper, table \ref{tab:hybrid-autoscalers} shows an overview of the proposals discussed below:\par
@@ -361,6 +363,7 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
          Light-weight &                 \cmark & \xmark & \cmark & \xmark & \cmark\\
          Edge architecture compliant &  \xmark & \xmark & \xmark & \xmark & \cmark\\
          SLA-compliant &                \xmark & \xmark & \cmark & \cmark & \cmark\\
+         Maximizes app performance &    \xmark & \xmark & \xmark & \xmark & \cmark\\
          \hline
     \end{tabular}
 \end{table}

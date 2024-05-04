@@ -77,6 +77,9 @@
 \usepackage{amssymb}% http://ctan.org/pkg/amssymb
 \usepackage{pifont}% http://ctan.org/pkg/pifont
 \usepackage{comment}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[newfloat]{minted}
 
 \graphicspath{{figures/}}
 \def\datapath{data}
@@ -138,6 +141,7 @@
 \listoffigures
 \listoftables
 \lstlistoflistings
+\listofalgorithms
 %TC:endignore
 
 \addtocontents{toc}{\vspace{1em}}
@@ -148,7 +152,8 @@
 
 \input{Chapters/Chapter1-Introduction.tex}
 \input{Chapters/Chapter2-Background.tex}
-\input{Chapters/Chapter3-Methodology}
+\input{Chapters/Chapter3-Methodology.tex}
+\input{Chapters/Chapter4-ExperimentalSetup.tex}
 
 \addtocontents{toc}{\vspace{2em}}
 
