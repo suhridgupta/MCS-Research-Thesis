@@ -1,0 +1,22 @@
+\clearpage
+
+\def\chaptertitle{Performance Evaluation}
+
+\lhead{\emph{\chaptertitle}}
+
+\chapter{\chaptertitle}
+\label{ch:performance-evaluation}
+
+\section{Assumptions and Underlying Hardware}
+\label{sec:ch4-hardware-assumptions}
+
+For the hardware setup, servers in the Melbourne Research Cloud \footnote{\url{https://docs.cloud.unimelb.edu.au/}} were leveraged to deploy microservices on. The set up consisted of 6 servers, using a total of 16 CPU cores and 32GB of memory. These servers were separated into a cloud and edge layer. The servers on the cloud layer have a significantly higher amount of CPU cores and memory assigned compared to the servers in the edge layer, to simulate the scarcity of resources in the edge layer. Furthermore, a simulated latency was added between inter-layer server communication to mimic the perceived distance between edge nodes and large data-centres.\par
+
+Kubernetes is used as the container orchestration technology behind the experimental microservice setup. The control plane is deployed on the cloud layer, while the data plane is on the edge layer. Furthermore, several assumptions were made before proceeding with the experimentation:
+
+\begin{itemize}
+    \item The only autoscaling performed would be horizontal pod autoscaling. Vertical and cluster autoscaling were out of scope of the project.
+    \item The pods on which autoscaling are not applied will have the maximum possible resource allocation to remove the chances of bottleneck.
+    \item At no point in the experiment would a node be taken down, or new node be added.
+    \item The autoscaler assumes that every node in the edge layer is an equally likely candidate for scheduling pods on.
+\end{itemize}
