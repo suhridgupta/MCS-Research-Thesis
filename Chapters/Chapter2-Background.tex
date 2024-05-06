@@ -258,6 +258,8 @@ Lorido et al. \cite{lorido2014review} showed that compared to reactive algorithm
 
 Ju et al. \cite{ju2021proactive} presented a proactive horizontal pod autoscaling solution for edge computing paradigms. The algorithm, known as Proactive Pod Autoscaler (PPA) was designed to predict resource requests on multiple user-defined metrics, such as CPU request and I/O traffic requests. The algorithm does not use any specific machine learning model for the time-series analysis, instead the model is to be inputted by the user. This model agnostic architecture allows for a very high level of customization. The user can deploy an ARIMA, LSTM, or even Bayesian confidence models. In a confidence model, the autoscaler will only deploy resources if the confidence value is seen to be above a specified user-defined threshold. The authors validated their findings by testing the architecture using LSTM and ARIMA models, the results concluded that this algorithm significantly outperformed both the default Kubernetes autoscaler, as well as existing reactive autoscaling solutions. However, such customizability leads to a complex deployment and hyper-parameter tuning process. This, along with a lack of initial training data causes erroneous predictions before the model corrects itself.\par
 
+Meng et al. \cite{meng2016crupa} created a proactive autoscaling algorithm for forecasting the Kubernetes CPU usage of containers using a time-series prediction. They achieved this using the ARIMA model. The time-series was split into a training and validation set using a 5:1 ratio before being passed to the deep learning model. The authors were able to demonstrate experimentally that such an architecture reduced the forecast errors to 6.5\%, as compared to the baseline of 17\%. This showed a high prediction accuracy, however the cost of training this model was prohibitively high, making it unsuitable for edge deployments.\par
+
 \suhrid{The research proposal lit review has a paragraph detailing how this algo works. Use that to describe the proactive part of my own hybrid architecture}
 
 Imdoukh et al. \cite{imdoukh2020machine} proposed a proactive autoscaling solution using an LSTM model, designed for edge computing architectures. The algorithm uses an LSTM neural network to predict future network traffic workload to determine the resources to assign to edge nodes ahead of time (cold-start). The authors experimentally demonstrated that their algorithm was as accurate as existing ARIMA-based proactive solutions, but theirs significantly reduced the prediction time, as well as computed the minimum resource allocation required to handle future workload. However, this algorithm also suffers from the problems related to a lack of initial training data encountered by Ju et al. \cite{ju2021proactive}\par
@@ -294,19 +296,19 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
 %TC:ignore
 \begin{table}
     \caption{Summary of proactive autoscaling solutions}\label{tab:proactive-autoscalers}
-    \begin{tabular}{ |l|l|l|l|l|l| }
+    \begin{tabular}{ |l|l|l|l|l|l|l| }
          \hline
-         \multirow{2}{*}{Features}&\multicolumn{5}{l|}{Proactive algorithms}\\
-         \cline{2-6}
-         &\cite{ju2021proactive}&\cite{imdoukh2020machine}&\cite{messias2016combining}&\cite{abdullah2020burst}&\cite{alidoost2023introducing}\\
+         \multirow{2}{*}{Features}&\multicolumn{6}{l|}{Proactive algorithms}\\
+         \cline{2-7}
+         &\cite{ju2021proactive}&\cite{meng2016crupa}&\cite{imdoukh2020machine}&\cite{messias2016combining}&\cite{abdullah2020burst}&\cite{alidoost2023introducing}\\
          \hline
-         Simple deployment &            \xmark & \cmark & \cmark & \cmark & \cmark\\
-         Simple parameter tuning &      \xmark & \xmark & \cmark & \xmark & \xmark\\
-         Custom metrics &               \cmark & \xmark & \xmark & \xmark & \xmark\\
-         Light-weight &                 \xmark & \xmark & \cmark & \xmark & \xmark\\
-         Edge architecture compliant &  \cmark & \xmark & \xmark & \xmark & \xmark\\
-         SLA-compliant &                \xmark & \cmark & \cmark & \xmark & \xmark\\
-         Maximizes app performance &    \xmark & \cmark & \xmark & \xmark & \xmark\\
+         Simple deployment &            \xmark & \cmark & \cmark & \cmark & \cmark & \cmark\\
+         Simple parameter tuning &      \xmark & \xmark & \xmark & \cmark & \xmark & \xmark\\
+         Custom metrics &               \cmark & \cmark & \xmark & \xmark & \xmark & \xmark\\
+         Light-weight &                 \xmark & \xmark & \xmark & \cmark & \xmark & \xmark\\
+         Edge architecture compliant &  \cmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
+         SLA-compliant &                \xmark & \cmark & \cmark & \cmark & \xmark & \xmark\\
+         Maximizes app performance &    \xmark & \xmark & \cmark & \xmark & \xmark & \xmark\\
          \hline
     \end{tabular}
 \end{table}
@@ -368,6 +370,8 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
     \end{tabular}
 \end{table}
 %TC:endignore
+
+\suhrid{TODO: Add 2 more proactive and hybrid algorithms to the discussion and table}
 
 %\begin{tikzpicture}
 %    \draw (0,0) rectangle (6,1) node[midway] {SLA in Edge Computing};
