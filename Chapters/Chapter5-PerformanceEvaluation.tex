@@ -7,16 +7,170 @@
 \chapter{\chaptertitle}
 \label{ch:performance-evaluation}
 
+In this chapter, we begin by discussing the underlying hardware configuration, and assumptions made before beginning the auto-scaling experiments in section \ref{sec:ch5-hardware-assumptions}. The cluster configuration, which involves the resource divisions between servers, overall cluster architecture, and deployment resources is discussed in section \ref{sec:ch5-cluster-config}.
+
 \section{Assumptions and Underlying Hardware}
-\label{sec:ch4-hardware-assumptions}
+\label{sec:ch5-hardware-assumptions}
 
-For the hardware setup, servers in the Melbourne Research Cloud \footnote{\url{https://docs.cloud.unimelb.edu.au/}} were leveraged to deploy microservices on. The set up consisted of 6 servers, using a total of 16 CPU cores and 32GB of memory. These servers were separated into a cloud and edge layer. The servers on the cloud layer have a significantly higher amount of CPU cores and memory assigned compared to the servers in the edge layer, to simulate the scarcity of resources in the edge layer. Furthermore, a simulated latency was added between inter-layer server communication to mimic the perceived distance between edge nodes and large data-centres.\par
+For the hardware setup, servers in the Melbourne Research Cloud \footnote{\url{https://docs.cloud.unimelb.edu.au/}} were leveraged to deploy microservices on. The set up consisted of 6 servers, using a total of 16 CPU cores and 48GB of memory. These servers were separated into a cloud and edge layer. The servers on the cloud layer have a significantly higher amount of CPU cores and memory assigned compared to the servers in the edge layer, to simulate the scarcity of resources in the edge layer. Furthermore, a simulated latency was added between inter-layer server communication to mimic the perceived distance between edge nodes and large data-centres.\par
 
-Kubernetes is used as the container orchestration technology behind the experimental microservice setup. The control plane is deployed on the cloud layer, while the data plane is on the edge layer. Furthermore, several assumptions were made before proceeding with the experimentation:
+Each server consists of an Ubuntu 22.04 operating system. Kubernetes v1.28.2 is used as the container orchestration technology behind the experimental micro service setup. For maximum flexibility, a bare-metal implementation of Kubernetes is used, instead of ready made solutions available from Amazon or Google. The control plane is deployed on the cloud layer, while the data plane is on the edge layer. Furthermore, several assumptions were made before proceeding with the experimentation:
 
 \begin{itemize}
-    \item The only autoscaling performed would be horizontal pod autoscaling. Vertical and cluster autoscaling were out of scope of the project.
-    \item The pods on which autoscaling are not applied will have the maximum possible resource allocation to remove the chances of bottleneck.
+    \item The only auto-scaling performed would be horizontal pod auto-scaling. Vertical and cluster auto-scaling were out of scope of the project.
+    \item The pods on which auto-scaling are not applied will have the maximum possible resource allocation to remove the chances of bottleneck.
     \item At no point in the experiment would a node be taken down, or new node be added.
     \item The autoscaler assumes that every node in the edge layer is an equally likely candidate for scheduling pods on.
 \end{itemize}
+
+\section{Cluster Configuration}
+\label{sec:ch5-cluster-config}
+
+The hardware was divided into the cloud and edge layer as depicted in table \ref{tab:cluster-hw-overview}. The control plane was divided into two servers, one for handling the Kubernetes control plane scheduling, API service, and etcd deployments, and the other for storing the Prometheus database, along with the microservice Jaeger metrics collection. The edge layer consisted of four servers with far less resources, to depict the difference in computing power. The network layer between the edge and cloud deployments also contained a simulated latency to denote the perceived geographical distance between them.\par
+
+%TC:ignore
+\begin{table}
+    \caption{Cluster architectural layout}\label{tab:cluster-hw-overview}
+    \centering
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        Node & Layer & CPU (cores) & Memory (GB)\\
+        \hline
+        Control-Plane-K8s & Cloud & 4 & 16\\
+        Control-Plane-DB  & Cloud & 4 & 16\\
+        Data-Plane-1      & Edge  & 2 & 4\\
+        Data-Plane-2      & Edge  & 2 & 4\\
+        Data-Plane-3      & Edge  & 2 & 4\\
+        Data-Plane-4      & Edge  & 2 & 4\\
+        \hline
+    \end{tabular}
+\end{table}
+%TC:endignore
+
+The cloud and edge nodes were differentiated in through Kubernetes through the internal labelling system. A key ``type'' with value either ``cloud'' or ``edge'' was added to each node. This would enable the scheduler to automatically consider restricting the deployment of pods to particular nodes. For example, the Prometheus deployment would only be deployed on the node of type cloud. This process is known as ``node affinity'' \cite{santos2019towards}.\par
+
+There were several options to deploy the social media application to Kubernetes. Manually cloning them from the repository, creating the custom resource definitions (CRDs), and deploying the YAML files is an option which gives maximum flexibility, but is difficult to debug if things go wrong. Due to this, the Kubernetes package manager Helm was used. Helm \footnote{\url{https://helm.sh/}} is another open-source project whose primary goal involved streamlining the installation, maintenance, and removal of Kubernetes deployments. This is achieved through the use of a Helm chart, which details the configuration of the project, and how to update and access it.\par
+
+Therefore the social media application was the first to be deployed on Kubernetes. However, before deploying the application, the primary deployments to be tested needed to be configured. Based on the ``wrk2'' benchmark that was discussed above, two APIs were identified. One was a GET call to the user's home timeline, and the other was a POST method made by the user to create a post.\par
+
+First, a default social media deployment was installed using the helm command below:
+
+\begin{lstlisting}[
+  caption={Social network installation using Helm},
+  captionpos=t,
+  label={lst:social-network-helm-install},
+  language=bash
+]
+$ helm install social-media \
+/DeathStarBench/socialNetwork/helm-chart/Chart.yaml -n default
+\end{lstlisting}
+
+With the social media network now deployed, a workload for both GET and POST commands were invoked to generate the latency trace on Jaeger, as depicted in listing \ref{lst:wrk2-api-calls}.
+
+\begin{lstlisting}[
+  caption={Social network installation using Helm},
+  captionpos=t,
+  label={lst:wrk2-api-calls},
+  float=ht,
+  language=bash
+]
+$ WRK2="/DeathStarBench/wrk2/wrk -D exp -t 1 -c 1 -d 1 -L -s -R 1"
+$ HT=./wrk2/scripts/social-network/read-home-timeline.lua
+$ CS=./wrk2/scripts/social-network/compose-post.lua
+$ IP=$(kubectl get svc nginx-thrift --template '{{.spec.clusterIP}}')
+$ PORT=8080
+$ $WRK2 $HT http://$IP:$PORT/wrk2-api/home-timeline/read
+$ $WRK2 $HT http://$IP:$PORT/wrk2-api/post/compose
+\end{lstlisting}
+
+With the traces generated, the deployments which require autoscaling could be identified for each. From the Jaeger traces generated in figure \ref{fig:ht-cp-trace}, it is clear that the two deployments highlighted in purple, namely ``home-timeline-service'', and ``compose-post-service'', were the major bottlenecks in API processing, and thus required autoscaling. Therefore, the helm deployment was updated to assign resources to them. The resources were assigned in a realistic manner consistent with edge deployments, and based on the number of components each deployment answered to. Listing \ref{lst:deploy-resource-update} shows the CPU resources assigned to both deployments.\par
+
+\begin{figure}[htb]
+    \centering
+    \caption{Home Timeline and Compose Post API trace}
+    \label{fig:ht-cp-trace}
+    \begin{minipage}{0.25\linewidth}
+        %\caption{Home Timeline API trace}
+        %\label{fig:home-timeline-trace}
+        \includegraphics[width=1.0\linewidth]{Figures/Home-Timeline-GET-Trace.png}
+    \end{minipage}\hfill
+    \begin{minipage}{0.75\linewidth}
+        %\caption{Compose Post API trace}
+        %\label{fig:compose-post-trace}
+        \includegraphics[width=1.0\linewidth]{Figures/Compose-Post-POST-Trace.png}
+    \end{minipage}
+\end{figure}
+
+\begin{lstlisting}[
+  caption={Update resources for bottlenecked deployments},
+  captionpos=t,
+  label={lst:deploy-resource-update},
+  language=bash
+]
+$ helm upgrade social-media \
+/DeathStarBench/socialNetwork/helm-chart/Chart.yaml -n default \
+--set-string compose-post-service.container.resources="requests: 
+      cpu: "30m"
+    limits:
+      cpu: "30m"" \
+--set-string home-timeline-service.container.resources="requests: 
+      cpu: "15m"
+    limits:
+      cpu: "15m""
+\end{lstlisting}
+
+\section{Experiment Setup}
+\label{sec:ch5-exp-setup}
+
+Two independent experiments were conducted to verify the performance of the hybrid autoscaler. The social media application was first tested using the GET API to autoscale the home-timeline-service deployment. Then, a more demanding as well as challenging workload was applied to the POST API for autoscaling the compose-post-service deployment. For both these experiments, the workload generation algorithm was used to create realistic daily workloads and tested over the period of five days. For the first experiment, the SLA constraint was set to 150 milliseconds latency, and for the second experiment, it was 1000 milliseconds. To achieve the autoscaling goals within these SLA constraints, the autoscaling components was configured as follows. The reactive autoscaler will check if the CPU utilization of the deployment is exceeding the 50\% threshold. If so, it will scale up based on the cooldowns and tolerations set. The proactive autoscaler on the other hand would check if the forecasted CPU utilization in the next 20 minutes was going to breach the 50\% threshold, and if so, would autoscale with the same configured parameters as the reactive one.
+
+\subsection{Proactive Forecaster Implementation}
+\label{subsec:ch5-forecaster-implement}
+
+\suhrid{Move this to ch4, move hyper-parameter tuning to ch4}
+
+The forecaster is deep-learning machine learning model, which consists of three layers of LSTM layers, alternated with two dropout layers. These dropout layers are used to prevent over-fitting. Finally, the last layer is a densely connected neural-network which generates the forecaster output in the required shape. Table \ref{tab:lstm-layers} shows the detailed information about the LSTM model layers.\par
+
+%TC:ignore
+\begin{table}
+    \caption{Overview of proactive forecaster layers.}\label{tab:lstm-layers}
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        Layer Details & Output Shape & Parameter Count\\
+        \hline
+        $LSTM_{1}$ & (10, 50) & 10400\\
+        $Dropout_{1}$ & (10, 50) & 0\\
+        $LSTM_{2}$ & (10, 50) & 20200\\
+        $Dropout_{2}$ & (10, 50) & 0\\
+        $LSTM_{3}$ & (50) & 20200\\
+        $Dropout_{3}$ & (50) & 0\\
+        $Dense_{1}$ & (540) & 27540\\
+        \hline
+    \end{tabular}
+\end{table}
+%TC:endignore
+
+\suhrid{Talk about the actual data generated by the workload algo, how savgol smooths data beforehand, how data is normalized before training, lstm default epoch, learn rate etc params, graphs from tensorboard, final graph of actual and predicted data and how it accurately predicts the beginning of the peaks even though the rest may not be as accurate.}
+
+The data which is generated by the workload algorithm \ref{alg:work-gen} is periodically scraped by the autoscaler daemon. An example of how this data may look over a period of four days is shown in figure \ref{fig:lstm-init-data}.
+
+\begin{figure}[htb]
+    \centering
+    \caption{Example of generated workload}
+    \label{fig:lstm-init-data}
+    \includegraphics[width=1.0\linewidth]{Figures/LSTM-Initial-Data.png}
+\end{figure}
+
+This data has two major peaks during the morning and evening, with one smaller peak in the afternoon. The night time workload is consistently minimal. Due to the randomness included in the algorithm, each of the peaks are never the exact same, which helps mimic the real data an edge architecture would experience. However, this data has several abrupt changes every few minutes, for example the utilization could be 100\% at 5:00pm, then suddenly drop down to 75\% at 5:20pm, before coming back up to 110\% at 5:40pm. These abrupt changes makes it difficult for the LSTM to be able to accurately predict the future workloads, and requires a much larger input sequence to reduce model loss, which will significantly drive up training times.\par
+
+To get around this issue, the proactive autoscaler introduces a data pre-processing component. This involves the use of noise reduction and data smoothing algorithm. This is done through a popular technique known as the Savitzky-Golay filter \cite{savitzky1964smoothing}. This filter takes $N$ points in a given time-series, with a filter width $w$, and calculates a polynomial average of order $o$ \cite{schafer2011savitzky}. The resulting time-series data can be seen in figure \ref{fig:lstm-smooth-data}, and is visibly smoother, and devoid of noise.\par
+
+\begin{figure}[htb]
+    \centering
+    \caption{Example of pre-processed workload}
+    \label{fig:lstm-smooth-data}
+    \includegraphics[width=1.0\linewidth]{Figures/LSTM-Smooth-Data.png}
+\end{figure}
+
+\suhrid{When talking about baseline algos to compare this: Say reactive was THPA, proactive was ju et al, with lstm without pre-processing data, and larger lstm layers added since it had to attempt to forecast the complete workload. Also run SLA benchmark on default K8s autoscaler}

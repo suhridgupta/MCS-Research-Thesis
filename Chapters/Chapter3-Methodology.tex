@@ -81,3 +81,9 @@ An overview of the hybrid autoscaler architecture is shown in figure \ref{fig:hy
 The second subsystem is the proactive autoscaler. A detailed breakdown of this will be discussed in chapter \ref{ch:experimental-setup}, however from a high-level perspective there are three main components. The resource provisioner is similar to that of the reactive autoscaler, however it also consists of a forecaster using machine learning techniques, and a data pre-processing algorithm. This algorithm removes any noise present in the time series data, and smoothens the graph, making it easier for the forecaster to make predictions in a low-cost manner.\par
 
 Finally, the autoscaling daemon controls which autoscaling logic will be applied to the replicas, and also keeps a track of any SLA violations. It also hosts the time-series metric data, and has a feedback loop with the proactive autoscaler. If it detects any SLA violations caused after autoscaling, it adjusts the hyperparameters of the proactive forecaster automatically to attempt to predict the time-series in a more accurate manner. Correspondingly, a lack of SLA violations during a specific time period reverts the autoscaler parameters to attempt to streamline the training process further. Such a heuristic method allows for the freeing up of the complex hyperparameter tuning process seen in most proactive models. This is a key part of the architecture which is essential in answering one of the research questions outlined in the thesis.\par
+
+\suhrid{In methodology, detail the reactive and proactive portions - detail only the algorithm pseudo-code}
+
+%\subsection{Architecture}
+%\label{subsec:ch3-hybrid-arch}
+

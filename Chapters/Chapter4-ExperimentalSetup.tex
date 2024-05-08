@@ -46,7 +46,7 @@ $ wrk2 -t2 -c5 -d30s -R8 http://<node-IP>:<app-port>/wrk2-api/post/compose
 
 A typical IoT application in the edge has a semi-predictable workload pattern. In this experiment, it is assumed that the workload peaks in the morning and evening, while seeing moderate usage during the afternoon. The workload is lowest at night. The workload simulator was modified to introduce an element of randomness to mimic realistic weekly workloads, which can vary on occasions such as weekends and public holidays.\par
 
-To achieve this, an IoT workload algorithm was created for leveraging the wrk2 generator to achieve this time-series. This is explained in algorithm \ref{alg:work-gen}. A constant light workload is set for night time, while different workloads for different day time hours are set, with peaks set in the morning and evening, and dips in the afternoon. The algorithm also contains a small random ``offset'' variable to depict the randomness inherent in the workload. This is depicted using the function $\mathcal{U}$, where $\mathcal{U}(0,1)$ returns a random number between 0 and 1. This workload is then executed using the wrk2 generator to apply the HTTP load on the microservice.
+To achieve this, an IoT workload algorithm was created for leveraging the wrk2 generator to achieve this time-series. This is explained in algorithm \ref{alg:work-gen}. A constant light workload is set for night time consisting of six hours between 12:00am and 06:00 am, while different workloads for the eighteen different day time hours are set, with peaks set in the morning and evening, and dips in the afternoon. The algorithm also contains a small random ``offset'' variable to depict the randomness inherent in the workload. This is depicted using the function $\mathcal{U}$, where $\mathcal{U}(0,1)$ returns a random number between 0 and 1. This workload is then executed using the wrk2 generator to apply the HTTP load on the microservice.
 
 %TC:ignore
 \begin{algorithm}
@@ -68,8 +68,10 @@ To achieve this, an IoT workload algorithm was created for leveraging the wrk2 g
 \end{algorithm}
 %TC:endignore
 
-\section{Hybrid Autoscaler Architecture}
+\section{Hybrid Autoscaler Configuration}
 \label{ref:hybrid-auto-arch}
+
+\suhrid{Move all algorithm pseudo-code to ch3, move lstm justification to ch3, all code implementation should remain here}
 
 \suhrid{Elaborate on this section. Put the detailed hybrid architecture diagram here and explain it before going through the individual sections. Use the text in Euro-Par paper}
 

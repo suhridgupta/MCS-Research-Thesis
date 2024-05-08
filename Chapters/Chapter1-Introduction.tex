@@ -7,6 +7,8 @@
 \chapter{\chaptertitle}
 \label{ch:introduction}
 
+\suhrid{Revise intro structure based on the euro-par paper introduction \cmark}
+
 In this chapter, a brief overview of the edge computing architecture paradigm, along with its uses, benefits, and challenges with respect to resource scaling are provided in section \ref{sec:edge-arch}. These challenges lead to the research gap and questions this thesis intends to answer in section \ref{sec:problem-overview}.\par
 
 \section{Edge Computing Overview}
@@ -32,8 +34,21 @@ The scaling of these microservice resources is done automatically through a proc
 \section{Problem Overview}
 \label{sec:problem-overview}
 
-With these limitations in mind, the object of this research project was to unify the reactive and proactive autoscaling solutions into a hybrid model. This solution combines the light weight, and ease of use and deployment of the reactive algorithm, with the SLA compliance and accurate resource modelling of proactive ones. The project aimed to answer the following questions in a satisfactory manner:
+To tackle these challenges, this thesis proposes a hybrid approach that combines the simplicity of using reactive autoscalers, while maintaining the resource availability benefits of the proactive autoscalers. The algorithm involves a smaller-scale LSTM machine learning model which can be quickly trained to recognize the key features of the resource workload over a course of time. The autoscaler then uses the predictions from the LSTM model to scale its resources in advance. A reactive autoscaler is used to maintain the current resource requirements as the predictive model cannot provide fine-tuned predictions. The accuracy of the prediction model is gauged by monitoring the SLA metrics, for example, the application latency. If it is observed that the predictive model is performing poorly, the training parameters are automatically tuned for the next training iteration.\par
+
+Thus, the project aimed to answer the following questions in a satisfactory manner:
 \begin{itemize}
     \item \textbf{\textit{RQ1:}} Can we integrate reactive and proactive autoscaling methods to develop a tailored algorithm for edge computing that eliminates the requirement for developers to fine-tune hyper-parameters for each autoscaling use case, while being lightweight enough to be deployed and run on cloudlets?
     \item \textbf{\textit{RQ2:}} Can the hybrid autoscaling solution achieve or exceed the SLA compliance capabilities of state-of-the-art reactive and proactive autoscaling solutions for edge computing, while minimizing the degredation of application performance?
+\end{itemize}
+
+In summary, the following contributions are thus made in this thesis:
+
+\begin{itemize}
+    \item Propose a hybrid autoscaling method that mitigates the challenges present in reactive and proactive methods.
+    \item The algorithm is implemented as an extension to Kubernetes.
+    \item Deploy this algorithm in a real edge cluster prototype.
+    \item Conduct extensive experiments using realistic daily workloads on the prototype microservice application.
+    \item Compare the SLA violations of the cutting edge reactive, proactive, and hybrid algorithms for three separate categories.
+    \item Propose future work and possible extensions to the algorithm.
 \end{itemize}
