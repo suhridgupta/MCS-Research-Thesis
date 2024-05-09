@@ -122,6 +122,30 @@ $ helm upgrade social-media \
 \section{Experiment Setup}
 \label{sec:ch5-exp-setup}
 
-Two independent experiments were conducted to verify the performance of the hybrid autoscaler. The social media application was first tested using the GET API to autoscale the home-timeline-service deployment. Then, a more demanding as well as challenging workload was applied to the POST API for autoscaling the compose-post-service deployment. For both these experiments, the workload generation algorithm was used to create realistic daily workloads and tested over the period of five days. For the first experiment, the SLA constraint was set to 150 milliseconds latency, and for the second experiment, it was 1000 milliseconds. To achieve the autoscaling goals within these SLA constraints, the autoscaling components was configured as follows. The reactive autoscaler will check if the CPU utilization of the deployment is exceeding the 50\% threshold. If so, it will scale up based on the cooldowns and tolerations set. The proactive autoscaler on the other hand would check if the forecasted CPU utilization in the next 20 minutes was going to breach the 50\% threshold, and if so, would autoscale with the same configured parameters as the reactive one.
+Two independent experiments were conducted to verify the performance of the hybrid autoscaler. The social media application was first tested using the GET API to autoscale the home-timeline-service deployment. Then, a more demanding as well as challenging workload was applied to the POST API for autoscaling the compose-post-service deployment. For both these experiments, the workload generation algorithm was used to create realistic daily workloads and tested over the period of one week. Both experiments would configure a flexible SLA latency agreement to be maintained. For the first experiment, the SLA constraint was set to a 150 milliseconds latency, and for the second experiment, it was 1000 milliseconds. The flexible SLA constraint was the primary focus of the experiment, however a moderate and strict SLA constraint was also chosen and tested. The SLA values are shown in table \ref{tab:experiment-sla-values}.\par
 
-\suhrid{When talking about baseline algos to compare this: Say reactive was THPA, proactive was ju et al, with lstm without pre-processing data, and larger lstm layers added since it had to attempt to forecast the complete workload. Also run SLA benchmark on default K8s autoscaler}
+%TC:ignore
+\begin{table}
+    \caption{Experimental SLA constraints}\label{tab:experiment-sla-values}
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        SLA Type & GET API constraint (ms) & POST API constraint (ms)\\
+        \hline
+        Flexible    & 150   & 1000\\
+        Moderate    & 125   & 900\\
+        Strict      & 100   & 800\\
+        \hline
+    \end{tabular}
+\end{table}
+%TC:endignore
+
+For the proposed hybrid algorithm to achieve these autoscaling goals within the SLA constraints, the autoscaling subsystems were configured as follows. The reactive autoscaler would check if the CPU utilization of the deployment was exceeding the 50\% threshold. If so, it would scale up based on the cooldowns and tolerations set. The proactive autoscaler on the other hand would check if the forecasted CPU utilization in the next 20 minutes was going to breach the 50\% threshold, and if so, would autoscale with the same configured parameters as the reactive one. The daemon would store the total CPU utilization of the deployment as a time-series for a maximum of seven days, and constantly check for SLA violations to tweak the hyper-parameters of the forecaster as discussed above in section \ref{subsec:ch4-auto-daemon-subsection}. To measure the effectiveness of the hybrid autoscaler, three baseline algorithms were chosen for comparison. All three would autoscale at the CPU threshold of 50\%. Furthermore, these algorithms would be implementations based on the ones discussed in section \ref{sec:ch2-lit-review}.\par
+
+The first was the default Kubernetes horizontal pod autoscaler. No modifications to the configuration were made, thus the scale up cooldown was 0 seconds, while the scale down was 300 seconds. Additionally, the autoscaler had no knowledge of the workload distribution or SLA violations on the edge nodes.\par
+
+The second baseline was an implementation of the reactive traffic aware horizontal pod autoscaler created by Phan et al. \cite{phan2022traffic}. This autoscaler scheduler would compute the ratio of workloads being exerted on the different edge nodes with the deployment pods. Once it did so, it would scale these resources in a commensurate proportion.\par
+
+Finally, the last baseline implementation was the Proactive Pod Autoscaler (PPA) devised by Ju et al. \cite{ju2021proactive}. This algorithm was an open-ended implementation which enabled the user to plugin a deep learning model of their choice. The PPA architecture consisted of three sub-sections, the formulator, evaluator, and updater. An LSTM model was injected into the autoscaler as the model file. This LSTM implementation was similar to the one used in the hybrid autoscaler, however it differed in two key elements. First, the LSTM did not expect pre-processed data without noise, and thus dealt with more complex time-series data. Secondly, due to this additional computation, the LSTM contained a deeper architecture layer with more neural network units. This was required as the algorithm had to correctly predict the complete future workload since there was no reactive autoscaler to fall back on. Over a fixed interval, the algorithm continuously looped through the time-series data and saved the forecast result to a metrics file. The evaluator took these outputs from the metrics file, along with the LSTM from the model file to predict the number of pods to assign in advance, and requested the Kubernetes scheduler for scaling through the API Service. A second loop, known as the update loop, then updated the LSTM model using the latest forecast, and cleared the metrics file. The hyper-parameters were carefully tuned to ensure that the model did not under-perform too significantly. Finally, the PPA architecture did not take into account SLA compliance, and thus SLA metrics were not provided as a feedback for hyper-parameter tuning.\par
+
+
