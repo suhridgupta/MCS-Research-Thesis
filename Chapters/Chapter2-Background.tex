@@ -164,7 +164,13 @@ RNN also employs a backpropagation algorithm during training. However, the param
 
 Long Short-Term Memory or LSTM is a deep learning model which is enhanced from the traditional RNN architecture. In an RNN function, the hidden state activation is influenced by nearby activation functions. This is known as the ``short-term'' memory. Meanwhile the overall network weights are influenced by the computations which occur over the entire long data sequence.\par
 
-\suhrid{TODO: Add LSTM gate architecture diagram}
+\suhrid{TODO: Fix LSTM cell architecture image}
+%\begin{figure}[htb]
+%    \centering
+%    \caption{LSTM Cell Architecture}
+%    \includegraphics[width=.6\linewidth]{Figures/LSTM-Cell-Architecture.png}
+%    \label{fig:lstm-cell-architecture}
+%\end{figure}
 
 LSTMs are designed in a way which avoids the long-term dependency problem by integrating a cell state into the architecture. The cell state acts as a conveyor belt of information, allowing information to be passed along the different data sequences easily. Information is added to or removed from the cell state using structures known as gates. These gates are created from a sigmoid layer, and a point-wise multiplication operation. The LSTM architecture has three gates for performing cell state operations. These are the ``Forget gate'', ``Input gate'', and ``Output gate''.\par
 

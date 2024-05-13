@@ -369,6 +369,38 @@ The filtered data is then normalized, and is then ready to be used to trained th
 
 The parameters are chosen in such a way that they minimize training time and over-fitting, while maximizing prediction accuracy. To further reduce over-fitting, an additional function known as ``early-stop'' is defined which halts the training of the model if the loss does not decrease for 10 consecutive epoch iterations. These parameters were determined based on the research experiments conducted by Siami-Namini et al. \cite{siami2018comparison}.\par
 
+\begin{center}
+    \captionof{figure}{Loss and root mean squared error per training epoch}
+    \label{fig:loss-mse-training}
+    \begin{tikzpicture}[scale=0.5]
+        \begin{axis}
+            \addplot table [x=Step, y=Value, col sep=comma] {Data/epoch_loss.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \qquad
+    \begin{tikzpicture}[scale=0.5]
+        \begin{axis}
+            \addplot table [x=Step, y=Value, col sep=comma] {Data/epoch_root_mean_squared_error.csv};
+        \end{axis}
+    \end{tikzpicture}
+\end{center}
+
+Figure \ref{fig:loss-mse-training} shows how the loss and root mean squared error of the model decreases with respect to the training epochs. The loss drops drastically for the first 25 epochs, before reducing gradually until the $60^{th}$ epoch. From here until the end of training, the loss value plateaus, making the limited gains too costly in terms of training time. From this, the choice of 75 epochs for the model training is justified.\par
+
+A similar trend is seen in the weights and biases of the LSTM. Figure \ref{fig:bias-weight-training} shows how these values for the final dense layer change over each epoch. In the first epoch, the biases are uniformly distributed, but slowly converge to a smaller value. Similarly, the final layer weights are more evenly distributed on the final epoch.\par
+
+\begin{figure}[htb]
+    \centering
+    \caption{Training bias and weights per training epoch}
+    \label{fig:bias-weight-training}
+    \begin{minipage}{0.45\linewidth}
+        \includegraphics[width=1.0\linewidth]{Figures/LSTM-Bias.png}
+    \end{minipage}\hfill
+    \begin{minipage}{0.45\linewidth}
+        \includegraphics[width=1.0\linewidth]{Figures/LSTM-Weights.png}
+    \end{minipage}
+\end{figure}
+
 The model training, validation and comparison with previous model performances takes approximately 3 minutes, after which, the model predicts the subsequent day's forecast. Figure \ref{fig:lstm-final-data} shows how this looks. The forecaster accurately depicts the initial peaks for the entire day. However, the rest of the data may not be as accurate, however this is not a significant drawback for the hybrid model, as the reactive algorithm is capable of making minor adjustments.
 
 \begin{figure}[htb]
