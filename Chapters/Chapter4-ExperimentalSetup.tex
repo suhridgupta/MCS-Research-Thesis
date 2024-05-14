@@ -350,6 +350,8 @@ To get around this issue, the proactive autoscaler introduces a data pre-process
 
 The filtered data is then normalized, and is then ready to be used to trained the model. Alongside the architecture configured in table \ref{tab:lstm-layers}, the LSTM model contains the following default hyper-parameter values depicted in table \ref{tab:lstm-params}.
 
+\suhrid{Discuss a bit more on why these values were chosen. Talk about how larger learning rate means less accuracy, but smaller means more training epochs required, more training epochs means training takes too long, etc.}
+
 %TC:ignore
 \begin{table}
     \caption{Proactive forecaster hyper-parameter values.}\label{tab:lstm-params}
