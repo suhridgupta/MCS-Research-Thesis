@@ -148,15 +148,21 @@ Recurrent Neural Networks store information about the past, and its future decis
 
 For the current RNN state, the formula can be written as follows:
 
-\[ h_{t} = \mathcal{F}(h_{t-1}, x_{t})\]
+\begin{equation}
+    h_{t} = \mathcal{F}(h_{t-1}, x_{t})
+\end{equation}
 
 Where $h_{t}$ is the current state, $h_{t-1}$ is the previous state, and $x_{t}$ is the current input value. In the simplest form, the function $\mathcal{F}$ is the activation function. Thus using the recurrent neuron weight $W_{h}$ and input weight $W_{x}$, the equation can be re-written as:
 
-\[ h_{t} = \tanh(W_{h}h_{t-1} + W_{x}x_{t})\]
+\begin{equation}
+    h_{t} = \tanh(W_{h}h_{t-1} + W_{x}x_{t})
+\end{equation}
 
 Using this current state value, the output can be calculated using the equation:
 
-\[ y_{t} = W_{y}h_{t}\]
+\begin{equation}
+    y_{t} = W_{y}h_{t}
+\end{equation}
 
 Where $W_{y}$ is the output weight.\par
 
@@ -176,22 +182,43 @@ LSTMs are designed in a way which avoids the long-term dependency problem by int
 
 The forget gate determines the amount of past information the LSTM should retain. This decision is made through the use of a sigmoid function, and the gate output $f_{t}$ is given through the equation:
 
-\[ f_{t} = \sigma(W_{f}\cdot[h_{t-1}, x_{t}] + b_{f})\]
+\begin{equation}
+    f_{t} = \sigma(W_{f}\cdot[h_{t-1}, x_{t}] + b_{f})
+\end{equation}
 
 Where $W$ is the gate neuron weight, and $b_{x}$ is the gate bias.\par
 
 The input gate determines how information is added to the cell state. This is done through the following steps:
 \begin{itemize}
-    \item Determine the values $i_{t}$ to be added:\\ $i_{t} = \sigma(W_{i}\cdot[h_{t-1}, x_{t}] + b_{i})$
-    \item Create vector $\hat{C_{t}}$ of all the possible values that may be added:\\ $\hat{C_{t}} = \tanh( W_{C}\cdot[h_{t-1}, x_{t}] + b_{C})$
-    \item Use the computed value and vector, along with the previous cell state $C_{t-1}$ to obtain the useful information which can be added to current cell state $C_{t}$:\\ $C_{t} = f_{t} \times C_{t-1} + i_{t} \times \hat{C_{t}}$
+    \item Determine the values $i_{t}$ to be added:
+    \begin{equation}
+        \label{eqn:input-gate}
+        i_{t} = \sigma(W_{i}\cdot[h_{t-1}, x_{t}] + b_{i})
+    \end{equation}
+    \item Create vector $\hat{C_{t}}$ of all the possible values that may be added:
+    \begin{equation}
+        \hat{C_{t}} = \tanh( W_{C}\cdot[h_{t-1}, x_{t}] + b_{C})
+    \end{equation}
+    \item Use the computed value and vector, along with the previous cell state $C_{t-1}$ to obtain the useful information which can be added to current cell state $C_{t}$:
+    \begin{equation}
+        C_{t} = f_{t} \times C_{t-1} + i_{t} \times \hat{C_{t}}
+    \end{equation}
 \end{itemize}
 
 Finally, the output gate determines which portion of the current cell state is included in the output. This is determined using three steps:
 \begin{itemize}
-    \item Create vector $o_{t}$ which scales the cell state value between -1 and +1:\\ $\hat{C_{t}} = \tanh(C_{t})$
-    \item Compute filter value $o_{t}$ which regulates which values from $o_{t}$ are included in the output:\\ $o_{t} = \sigma( W_{o}\cdot[h_{t-1}, x_{t}] + b_{o})$
-    \item Multiply the vector and filter to get the output $h_{t}$ which also acts as the hidden state of the next cell:\\ $h_{t} = o_{t} \times \hat{C_{t}}$
+    \item Create vector $o_{t}$ which scales the cell state value between -1 and +1:
+    \begin{equation}
+        \hat{C_{t}} = \tanh(C_{t})
+    \end{equation}
+    \item Compute filter value $o_{t}$ which regulates which values from $o_{t}$ are included in the output:
+    \begin{equation}
+        o_{t} = \sigma( W_{o}\cdot[h_{t-1}, x_{t}] + b_{o})
+    \end{equation}
+    \item Multiply the vector and filter to get the output $h_{t}$ which also acts as the hidden state of the next cell:
+    \begin{equation}
+        h_{t} = o_{t} \times \hat{C_{t}}
+    \end{equation}
 \end{itemize}
 
 \section{Literature Review}
