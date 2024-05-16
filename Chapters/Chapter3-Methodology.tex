@@ -9,24 +9,27 @@
 
 Based on the overview of and challenges faced by edge computing paradigms in conforming to SLA constraints, the stated research questions, and the related works discussed above, a hybrid auto-scaling algorithm to answer these questions was proposed during the course of this research project.\par
 
-In this chapter, a brief discussion surrounding the problems and challenges of auto-scaling edge architecture deployments in an SLA-compliant manner will be conducted in section \ref{sec:ch3-problem-overview}. Section \ref{sec:ch3-hybrid-autoscale-overview} will detail the high-level overview of the proposed hybrid autoscaler, the objectives of the algorithm, and the challenges it faces.
+In this chapter, a brief discussion surrounding the problems and challenges of auto-scaling edge architecture deployments in an SLA-compliant manner will be conducted in section \ref{sec:ch3-problem-overview}. Section \ref{sec:ch3-hybrid-autoscale-overview} will detail the high-level overview of the proposed hybrid autoscaler, the objectives of the various algorithm subsystems, the challenges it faces, and an analysis of the algorithm's space and time complexity.
 
 \section{Problem Overview}
 \label{sec:ch3-problem-overview}
 
 Edge architectures are split into three layers \cite{hamdan2020edge}. 
-The cloud layer complements cloud-computing paradigms, wherein it manages the entire network architecture. The edge layer consists of data storage and communication with user devices. Finally, the device layer consists of all the user devices that will interact with the edge architecture.\par
+The cloud layer is similar to cloud-computing paradigms, wherein it manages the entire network architecture and stores large scale data. The edge layer consists of smaller scale user data storage and communication with user devices. Finally, the device layer consists of all the user devices that will interact with the edge architecture.\par
 
 \begin{figure}[htb]
     \centering
     \caption{Autoscaling problem overview}
-    \includegraphics[width=0.8\linewidth]{Figures/Problem-Overview.pdf}
+    \includegraphics[width=1.0\linewidth]{Figures/Problem-Overview.pdf}
     \label{fig:autoscaling-problem-overview}
 \end{figure}
 
-The cloud layer has the most amount of resources allocated to it, as it is in charge of managing the entire network, and coordinating the resource allocation of the edge layer. However, the primary drawback is the distance between the user and the cloud layer which results in significant latency, making it unsuitable for serving real-time user requests. Thus only system critical applications such as the micro-service control plane are deployed on this plane. The edge layer has far fewer resources than the cloud layer, but its proximity to the users results in lower network latency, making it ideal for resources scaling. For this reason, the edge layer consists of the micro-service worker nodes. These nodes allocate resources dynamically according to user requirements through the process known as auto-scaling.\par
+The cloud layer has the most amount of resources allocated to it, which it requires when managing the entire network, computing the intensive processing of large scale data, and coordinating the resource allocation of the edge layer. However, the primary drawback is the distance between the user and the cloud layer which results in significant latency, making it unsuitable for serving real-time user requests. Thus only system critical applications such as the controller orchestration control plane are deployed on this plane. The edge layer has far fewer resources than the cloud layer, but its proximity to the users results in lower network latency, making it ideal for resources scaling. For this reason, the edge layer consists of the orchestration tool's worker nodes and the micro-service which receives and serves user data. These worker nodes allocate resources to the micro-service deployments dynamically according to user requirements through the process known as auto-scaling.\par
 
-Figure \ref{fig:autoscaling-problem-overview} shows the auto-scaling process. The users in the device layer send requests and receive responses to the micro-service deployment in the edge layer. The time taken to receive this response is considered to be the SLA latency metric negotiated between the edge deployment provider and the customer. Using the number of requests being received by the user layer, the edge layer micro-service autoscaler computes the total resource requirements to serve the customer. Based on its findings, the edge layer requests the container orchestration in the cloud layer to either downscale or upscale its resources. The container orchestrator then computes the resource allocation location, and sends its response back to the edge layer.\par
+Figure \ref{fig:autoscaling-problem-overview} shows the auto-scaling process. The users in the device layer send requests and receive responses to the micro-service deployment in the edge layer. The time taken to receive this response is considered to be the SLA latency metric negotiated between the edge deployment provider and the customer. Using the number of requests being received by the user layer, the edge layer micro-service autoscaler computes the total resource requirements to serve the customer. Based on its findings, the edge layer requests the container orchestration in the cloud layer to either downscale or upscale its resources. The container orchestration then computes the required resource allocation as well as the nodes on which to allocate them to, and sends its response back to the edge layer.\par
+
+\subsection{Problem Formulation}
+\label{subsec:ch3-problem-formulation}
 
 %TC:ignore
 \begin{table}
@@ -36,25 +39,29 @@ Figure \ref{fig:autoscaling-problem-overview} shows the auto-scaling process. Th
         \hline
         Symbol & Definition\\
         \hline
-        $\mathcal{S}_{v}(t)$ & The value of the SLA metric at time $t$\\
+        $\mathcal{S}_{c}(t)$ & SLA constraint metric value at time $t$\\
         $\Delta$ & Maximum SLA metric threshold agreed by cloud provider and customer\\
+        $\mathcal{V}$ & Number of SLA violations for the chosen metric\\
         $\mathcal{C}_{t}$ & ``Cold start'' time taken to scale resource replicas\\
         $req_{RT}(t)$ & Round trip latency of user request to edge layer\\
         $\mathcal{K}_{t}$ & Constant latency present between edge and device layers\\
         $\mathcal{U}(t)$ & Latency of deployment with unitary resource replica\\
         $\mathcal{D}$ & Total resources in micro-service deployment\\
         $p_{i}$ & Resource pod $i$ of deployment $\mathcal{D}$ where $i = \{1, 2, .. N\}$\\
+        $\alpha$ & Cost per unit resource for cloud provider\\
+        $\mathcal{L}$ & Maximum allowed deployment cost assigned by the user\\
         \hline
     \end{tabular}
 \end{table}
 %TC:endignore
 
-For real-time applications, the auto-scaling should adhere to SLA metric as much as possible, and try to minimize the number of violations. The SLA metric violation $\mathcal{S}_{v}(t)$ is defined as when it exceeds a certain threshold $\Delta$ agreed by both the cloud provider and the customer.
+For real-time applications, the auto-scaling should adhere to the SLA metric as much as possible, and try to minimize the number of violations. An SLA constraint $\mathcal{S}_{c}(t)$ is defined as an agreed metric not exceeding above a threshold $\Delta$ agreed by both the cloud provider and the customer. For this experiment, the latency of user requests will be used as the SLA constraint metric.
+
 \begin{equation}
-    \mathcal{S}_{v}(t) > \Delta
+    \mathcal{S}_{c}(t) > \Delta
 \end{equation}
 
-The threshold $\Delta$ is typically split into three categories:
+The threshold $\Delta$ varies from application to application, however they are typically chosen from three broad categories:
 \begin{itemize}
     \item Flexible - This is typically the highest allowed violation threshold for the application. Flexible SLA metrics are used to gauge the availability of the deployment. Most IoT applications employ this threshold.
     \item Strict - This is the lowest allowed violation threshold in the application. This threshold is significantly challenging to maintain, and is used by extremely time-critical applications such as remote tools for surgery.
@@ -67,19 +74,19 @@ The auto-scaling will thus use a resource metric to scale its resources up or do
     \mathcal{C}(t) = \mathcal{R}_{download}(t) + \mathcal{R}_{deploy}(t) + \mathcal{R}_{register}(t)
 \end{equation}
 
-The replica download time is usually a one-time delay due to optimizations done on modern container orchestration software, and can be ignored for SLA latency calculations. Thus, we can reduce this equation to the following:
+The replica image is typically downloaded from a public repository. This download time is usually a one-time delay due to optimizations done on modern container orchestration software, and can be ignored for SLA latency calculations. Thus, we can reduce this equation to the following:
 
 \begin{equation}
     \mathcal{C}(t) \approx \mathcal{R}_{deploy}(t) + \mathcal{R}_{register}(t)
 \end{equation}
 
 
-This time to deploy and register the replica to the container orchestration tool cannot be avoided. Furthermore, it can be shown that the number of SLA violations $\mathcal{V} \propto \mathcal{C}(t)$ due to the correlation between cold-start delay and the lack of available resources.\par
+This time to deploy and register the replica to the container orchestration cloud layer cannot be avoided. Furthermore, it can be shown that the number of SLA violations $\mathcal{V} \propto \mathcal{C}(t)$ due to the correlation between cold-start delay and the lack of available resources.\par
 
-Thus, when computing the SLA violation for a latency metric, the SLA latency can be re-written as the sum of the cold-start time and the round-trip time taken for the request.
+Thus, when computing the SLA constraint value for a latency metric, the SLA latency can be re-written as the sum of the cold-start time and the round-trip time taken for the request.
 
 \begin{equation}
-    \mathcal{S}_{v}(t) = \mathcal{C}(t) + req_{RT}(t)
+    \mathcal{S}_{c}(t) = \mathcal{C}(t) + req_{RT}(t)
 \end{equation}
 
 
@@ -89,37 +96,39 @@ This round-trip time is the combined sum of the inherent delay present in the ne
     req_{RT}(t) = 2 \times latency_{N/W} + latency_{app}
 \end{equation}
 
-The network delay can be reduced by investing in higher network bandwidths, but such improvements are out of scope of the project. Here we consider this latency to be a constant $\mathcal{K}$. Furthermore, $latency_{app}$ is inversely proportional to the available resources to the application. Using this information, $req_{RT}(t)$ is approximated as:
+The network delay can be reduced by investing in higher network bandwidths, but such improvements are out of scope of the project. Here we consider this latency to be a constant $\mathcal{K}$. Furthermore, $latency_{app}$ is inversely proportional to the available resources to the application $\mathcal{D}$, since increasing the number of resource replicas helps spread out the user request workload thus reducing the chances of a bottleneck occurring. Using this information, $req_{RT}(t)$ is approximated as:
 
 \begin{equation}
-    req_{RT}(t) \approx \mathcal{K}(t) + \frac{\mathcal{U}(t)}{resources_{app}}
+    req_{RT}(t) \approx \mathcal{K}(t) + \frac{\mathcal{U}(t)}{\mathcal{D}}
 \end{equation}
 
-Where $\mathcal{U}(t)$ is the app latency of a deployment with a unitary resource deployment. For horizontal pod autoscaling, the resources here are the number of pods in deployment $\mathcal{D}$ such that $\mathcal{D} = \sum_{i} p_{i}$, where $i$ represents the current number of deployed pods. These pods process the request. The final SLA equation can be re-written as follows:
+Where $\mathcal{U}(t)$ is the app latency of a deployment with a unitary resource deployment. For horizontal pod autoscaling, the resources here are the number of pods in deployment resources $\mathcal{D}$ such that $\mathcal{D} = \sum_{i} p_{i}$, where $i$ represents the current number of active pods. These pods are the smallest unit of resource for auto-scaling purposes, and process the user requests. The final SLA equation can be re-written as follows:
 
 \begin{equation}
-    \mathcal{S}_{v}(t) = \mathcal{C}(t) + \frac{\mathcal{U}(t)}{\sum_{i} p_{i}} + \mathcal{K}(t)
+    \mathcal{S}_{c}(t) = \mathcal{C}(t) + \frac{\mathcal{U}(t)}{\sum_{i} p_{i}} + \mathcal{K}(t)
 \end{equation}
 
-Thus, the primary aim of the proactive autoscaler is to significantly reduce or even eliminate the cold start, while the reactive autoscaler aims to increase the number of resources assigned to the deployment to minimize the application latency.\par
+Thus, the primary aim of the autoscaler is to significantly reduce or even eliminate the cold start, while also increasing the number of resources assigned to the deployment to minimize the application latency. By doing so, the autoscaler aims to reduce the SLA latency below the agreed threshold $\Delta$ thus minimizing the number of SLA violations $\mathcal{V}$.\par
 
-From the above equation, it is clear that as $\sum_{i} p_{i}$ approaches $\infty$, the value of $\frac{\mathcal{U}(t)}{\sum_{i} p_{i}}$ approaches 0. Thus, why not simply allocate the maximum number of pods to the deployment?\par
+From the above equation, it is clear that as $\sum_{i} p_{i}$ approaches $\infty$, the value of $\frac{\mathcal{U}(t)}{\sum_{i} p_{i}}$ approaches 0. Thus a question arises: why not ignore intelligently auto-scaling altogether, and simply allocate the maximum number of pods to the deployment?\par
 
-Most cloud providers allocate a cost $\mathcal{L}$ per each resource assignment to the deployment. If the maximum number of pods which can be deployed is $N$, the cost is calculated as follows.
+Most cloud providers such as AWS and GCP allocate a cost per each resource assignment to the deployment. If the maximum number of pods which can be deployed is $N$, the cost is calculated as follows.
 
 \begin{equation}
     cost = \alpha \times \sum_{i} p_{i} \quad ;\,i \le N
 \end{equation}
 
-Where $\alpha$ is the unitary resource cost which may vary depending on the resource provider. Thus, simply scaling all resources to the maximum amount may result in significant and infeasibly high deployment costs. Thus the auto-scaling equation can be converted to an optimization problem. The objective of the autoscaler is to maximize resources in a way which minimizes both the latency, as well as the cost. Furthermore, the customer will have a maximum cost $\mathcal{L}$ which the deployment must not exceed. Determining whether or not the resource allocation of at least $\mathcal{D}$ without exceeding this cost $\mathcal{L}$ is possible, is akin to the famous Knapsack decision problem \cite{kellerer2004introduction}. This decision problem is NP-Complete, and as such no known algorithm can compute this auto-scaling decision in polynomial time \cite{martello1987algorithms}. Due to this drawback, most autoscalers rely on a reactive rule-based or proactive machine learning technique to compute a close approximation.\par
+Where $\alpha$ is the unitary resource cost which may vary depending on the cloud provider. Thus, simply scaling all resources to the maximum amount may result in substantial and infeasibly high deployment costs. Based on this additional information, the auto-scaling SLA equation and the cost equation can be merged into an optimization problem. The objective of the autoscaler is to maximize resources in a way which minimizes both the latency, as well as the cost. Furthermore, the customer will have a maximum cost $\mathcal{L}$ which the deployment must not exceed. Maximizing the value of the resources in $\mathcal{D}$ while limiting the cost below the threshold $\mathcal{L}$ to reduce the SLA constraint metric $\mathcal{S}_{c}$ below the agreed threshold is akin to the famous Knapsack Problem \cite{kellerer2004introduction}. This problem is NP-Hard, and as such no known algorithm can determine the best value in polynomial time \cite{martello1987algorithms}. However, an approximation close to this best value can be computed instead, and this can be done in polynomial time. Due to this, most autoscalers rely on a reactive rule-based or proactive machine learning technique to compute such close approximations.\par
 
-A problem arises, however, in the amount of time and resources it takes to train a proactive model. Not only is a significant amount of CPU and memory resources consumed in the training process, but a large time-series data set is also required to generate sufficient number of training windows, without which the model will provide erroneous results until such time as the model is adequately trained. While hybrid models help to mitigate the initial errors via the reactive auto-scaling component, the questions regarding the model complexity remained an open issue.\par
+A problem however arises in the amount of resources it takes to train a proactive model. Not only is a significant amount of CPU and memory resources consumed in the training process, but a large time-series data set is also required to generate sufficient number of training windows, without which the model will provide erroneous results until such time as the model is adequately trained. While hybrid models help to mitigate the initial errors via the reactive auto-scaling component, the questions regarding the proactive model's resource usage remained an open issue.\par
 
-Another issue in proactive autoscalers is that not only does it predict increases in utilization before-hand, it also does so for the drop-off in utilization. This can lead to the edge deployment prematurely reducing its resources due to the drop-off forecast, causing several SLA violations due to low availability of resources. To offset this, several hybrid algorithms combine the readings of their reactive and proactive autoscalers, and autoscale according to the highest reading. While this approach works, such algorithms render the accurate resource drop-off predictions of the forecaster redundant, merely taking up precious computation space in the edge deployment.\par
+%Another issue in proactive autoscalers is that not only does it predict increases in utilization before-hand, it also does so for the drop-off in utilization. This can lead to the edge deployment prematurely reducing its resources due to the drop-off forecast, causing several SLA violations due to low availability of resources. To offset this, several hybrid algorithms combine the readings of their reactive and proactive autoscalers, and autoscale according to the highest reading. While this approach works, such algorithms render the accurate resource drop-off predictions of the forecaster redundant, merely taking up precious computation space in the edge deployment.\par
 
-In most proactive autoscalers, the forecaster attempts to perfectly model the time-series curve to assign resources. Even in the hybrid algorithms that have been proposed in chapter \ref{ch:background}, the proactive sections of the autoscalers are generally unmodified proactive forecasters bundled together with a reactive component. This strategy of attempting to perfectly forecasting the curve is what takes such large amounts of resources.\par
+Another issue in a purely proactive autoscaler is the amount of time it takes to both train the model, as well as generate the predictions. Time-series forecasters such as LSTM and ARIMA are typically incredibly complex deep neural networks with thousands of neurons in several layers. This can result in the training process taking upwards of an hour. A large training time makes it incredibly difficult to actively tune the hyper-parameters of the model based on the perceived accuracy, as adapting these values too frequently would result in several hours of training per day, during which time the model is unable to predict new values. Once again, a hybrid architecture is typically used to mitigate this issue, as when the proactive model is training, the reactive autoscaler takes over. However, this approach not feasible for an SLA-constrained architecture, as the reactive component is not SLA compliant due to its inability to mitigate the cold start problem.\par
 
-In the autoscaler proposed in this thesis, the autoscaler will not attempt to predict the exact resource workload. Instead, the time-series graph is heavily simplified using a noise filtering method, and then inputted to the machine learning model. Furthermore, the LSTM only attempts to forecast the exact times when resource requirements starts to increase. Every other requirement, such as the stable resource utilization, as well as the drop-off in non-peak time periods can be handled by the reactive autoscaler, thus heavily simplifying the forecaster architecture. The simplified forecaster has an additional benefit in not requiring incredibly lengthy amounts of time-series data to be stored for it to make accurate predictions, thus this data can also be kept in the edge layer. This makes the autoscaler extremely lightweight and responsive, and thus capable of being deployed in an edge environment.\par
+In most proactive autoscalers, the forecaster attempts to perfectly model the time-series curve to assign resources. Even in the hybrid algorithms that have been proposed in section \ref{sec:ch2-lit-review}, the proactive sections of the autoscalers are generally unmodified proactive forecasters bundled together with a reactive component. This strategy of attempting to perfectly forecasting the curve is what takes such large amounts of resources.\par
+
+In the autoscaler proposed in this thesis, the autoscaler will not attempt to predict the exact resource workload. Instead, the time-series graph is heavily simplified using a noise filtering method, and then inputted to the machine learning model. Furthermore, the LSTM only attempts to forecast the exact times when resource requirements starts to increase. Every other requirement, such as the stable resource utilization, as well as the drop-off in non-peak time periods can be handled by the reactive autoscaler, thus heavily simplifying the forecaster architecture. This drastically reduces LSTM training time down to a few minutes. The simplified forecaster has an additional benefit in not requiring incredibly lengthy amounts of time-series data to be stored for it to make accurate predictions, thus this data can also be kept in the edge layer. This makes the autoscaler extremely lightweight, responsive, and most importantly SLA-compliant, and thus capable of being deployed in an edge environment.\par
 
 \section{Proposed Hybrid Autoscaler}
 \label{sec:ch3-hybrid-autoscale-overview} 
@@ -131,19 +140,17 @@ In the autoscaler proposed in this thesis, the autoscaler will not attempt to pr
     \label{fig:hybrid-arch-overview}
 \end{figure}
 
-An overview of the hybrid autoscaler architecture is shown in figure \ref{fig:hybrid-arch-overview}. The edge node consists of three main sections. The first is the reactive autoscaling subsystem, which has the resource provisioner, and the configuration which dictates the cool-down logic for scaling up and down. As Zhang et al. \cite{zhang2019quantifying} demonstrated, the microservice system stability is directly related to the careful selection of cooldown parameters. Thus, these must be available to the user in a configuration setting.\par
+An overview of the hybrid autoscaler architecture is shown in figure \ref{fig:hybrid-arch-overview}. The edge node consists of three main sections. The first is the reactive auto-scaling subsystem, which has the resource provisioning module, and the configuration which dictates the cool-down logic for scaling up and down. As Zhang et al. \cite{zhang2019quantifying} demonstrated, the micro-service system stability is directly related to the careful selection of cool-down parameters. Thus, these must be available to the user in a configuration setting.\par
 
-\suhrid{TODO: Make sure to discuss the proactive autoscaler in detail in Ch3 using the notes written in Ch2 \cmark}
-The second subsystem is the proactive autoscaler. From a high-level perspective there are three main components. The resource provisioner is similar to that of the reactive autoscaler, however it also consists of a forecaster using machine learning techniques, and a data pre-processing algorithm. This algorithm removes any noise present in the time series data, and smoothens the graph, making it easier for the forecaster to make predictions in a low-cost manner. A detailed explanation of the forecaster logic itself will be discussed in chapter \ref{ch:experimental-setup}.\par
+The second subsystem is the proactive autoscaler. From a high-level perspective there are three main components. The resource provisioning module is similar to that of the reactive autoscaler, however it also consists of a forecaster using an LSTM deep-learning model, and a data pre-processing algorithm. This algorithm removes any noise present in the time series data, and smoothens the data curves, making it easier for the forecaster to make predictions in a low-cost manner. A detailed explanation of the forecaster logic itself will be discussed in chapter \ref{ch:experimental-setup}.\par
 
-Finally, the auto-scaling daemon controls which auto-scaling logic will be applied to the replicas, and also keeps a track of any SLA violations. It also hosts the time-series metric data, and has a feedback loop with the proactive autoscaler. If it detects any SLA violations caused after autoscaling during a configured time window, it automatically adjusts the hyper-parameters of the proactive forecaster in an attempt to predict the time-series in a more accurate manner during the next training iteration. Correspondingly, a lack of SLA violations during a specific time period reverts the autoscaler parameters to attempt to streamline the training process further. Such a heuristic method allows for the freeing up of the complex hyper-parameter tuning process seen in most proactive models. This is a key part of the architecture which is essential in answering one of the research questions outlined in the thesis.\par
+Finally, the auto-scaling daemon controls which auto-scaling logic will be applied to the replicas, and also keeps a track of any SLA violations. It also hosts the time-series metric data, and has a feedback loop with the proactive autoscaler. If it detects any SLA violations were caused after auto-scaling during a configured time window, it automatically adjusts the hyper-parameters of the proactive forecaster in an attempt to predict from the time-series data in a more accurate manner during the next training iteration. Correspondingly, a lack of SLA violations during a specific time window period reverts the autoscaler parameters back to the original values, in an attempt to streamline the training process further. Such a heuristic method allows for the freeing up of the complex hyper-parameter tuning process seen in most proactive models from the autoscaler's deployment process. This is a key part of the architecture which is essential in answering one of the research questions outlined in the thesis.\par
 
-\suhrid{In methodology, detail the reactive and proactive portions - detail only the algorithm pseudo-code \cmark}
 
 \subsection{Architecture Overview}
 \label{subsec:ch3-hybrid-arch}
 
-At a high-level, the default Kubernetes horizontal pod autoscaler operates on the ratio between the current and desired metric values, which can be written as:
+At a high-level, the container orchestration's default horizontal pod autoscaler operates on the ratio between the current and desired metric values, which can be written as:
 
 \begin{equation}
     replicas_{desired} = \lceil replicas_{current} \times \frac{metric_{current}}{metric_{desired}}\rceil
@@ -160,15 +167,15 @@ The tolerance is a constant which informs the Kubernetes autoscaler when to skip
 
 For example, if the current metric is 60, and the desired metric is 50, the tolerance is calculated as $ tolerance = \abs{ \frac{60 - 50}{60}} = 0.167$. By default, if the tolerance value is below 0.1, autoscaling is skipped for that control loop, however this can be configured by the user.\par
 
-The scale up and scale down cooldowns control how quickly autoscaling occurs. The default approach which is set by Kubernetes can be concisely stated as ``Scale up as quickly as possible, while scale down very gradually''. Therefore, the default scale up cooldown is set to 0 seconds, meaning that the moment the desired replica value increases, the autoscaling will be initiated. However, the default cooldown is set to 300 seconds, meaning that if the desired replica value is decreased, it must remain decreased for 300 seconds (or 20 control loops) before the resources are scaled down.\par
+The scale up and scale down cooldowns control how quickly auto-scaling occurs. The default approach which is set by the container orchestration can be concisely stated as ``Scale up as quickly as possible, while scaling down very gradually''. Therefore, the default scale up cooldown is set to 0 seconds, meaning that the moment the desired replica value increases, the autoscaling will be initiated. However, the default cooldown is set to 300 seconds, meaning that if the desired replica value is decreased, it must remain decreased for 300 seconds (or 20 control loops) before the resources are scaled down.\par
 
-A cooldown value which is too low would cause a repetitive upscaling and downscaling of the resources, leading to a significant stress on the system as well as a wastage of resources. Meanwhile, a large value would render the autoscaler unable to assign resources quickly enough to ensure SLA latency compliance. Thus, for the proposed autoscaler, a moderate cooldown value was chosen to ensure best system stabilty and SLA compliance. This cooldown configuration would be applied to both the proactive and reactive auto-scaling sub-components.\par
+A cooldown value which is too low would cause a repetitive scaling up and scaling down of the resources, leading to a significant stress on the system as well as a wastage of resources. Meanwhile, a large value would render the autoscaler unable to assign resources quickly enough to ensure SLA latency compliance. Thus, for the proposed autoscaler, a moderate cooldown value was chosen to ensure best system stabilty and SLA compliance. This cooldown configuration would be applied to both the proactive and reactive auto-scaling subsystems to maintain consistency.\par
 
-For auto-scaling proactively, a custom metric $metric_{forecast}$ is used, which defines the future CPU workload expected to be exerted on the social media application $\mathcal{T}$ seconds in the future, where $\mathcal{T}$ can be configured by the user. This $metric_{forecast}$ value will be sent to the auto-scaling daemon by the proactive autoscaler.\par
+For auto-scaling proactively, a custom metric $metric_{forecast}$ is used, which defines the future CPU workload expected to be exerted on the social media application $\mathcal{T}$ seconds in the future, where $\mathcal{T}$ can be configured during the autoscaler deployment process. This $metric_{forecast}$ value will be sent to the auto-scaling daemon by the proactive autoscaler.\par
 
 The autoscaler daemon consists of a scheduling logic controller which handles how to switch between proactive and reactive auto-scaling. Algorithm \ref{alg:scheduling-logic-daemon} explains how the hybrid scheduling logic determines which auto-scaling subsystem to employ. The hybrid scheduler takes four inputs, namely the $replicas_{current}$, $metric_{current}$, $metric_{desired}$, and $metric_{forecast}$ variables discussed above. It outputs one value, the $replicas_{desired}$.\par
 
-The autoscaler computes two replica values, one for the proactive forecaster which determines the replicas after $\mathcal{T}$ seconds, and one for the reactive forecaster, which determines the current resource requirements. If it is found that the future requirements are higher than the current resource utilization, then the hybrid scheduler outputs the forecaster replica count as the desired replicas. Otherwise, the hybrid scheduler determines that the utilization is either stabilizing or about to decline. Due to this, it makes a decision that the reactive replica count is the desired number. The hybrid scheduler then sends this value to the container orchestration controller plane to autoscale the replicas accordingly using either the reactive or proactive sub-system's resource provisioner.\par
+The autoscaler computes two replica values, one for the proactive forecaster which determines the replicas after $\mathcal{T}$ seconds, and one for the reactive forecaster, which determines the current resource requirements. If it is found that the future requirements are higher than the current resource utilization, then the hybrid scheduler outputs the forecaster replica count as the desired replicas. Otherwise, the hybrid scheduler determines that the utilization is either stabilizing or about to decline. Due to this, it makes a decision that the reactive replica count is the desired number. The hybrid scheduler then sends this value to the container orchestration controller plane to autoscale the replicas accordingly using either the reactive or proactive sub-system's resource provisioning modules.\par
 
 %TC:ignore
 \begin{algorithm}
@@ -189,12 +196,12 @@ The autoscaler computes two replica values, one for the proactive forecaster whi
 \end{algorithm}
 %TC:endignore
 
-The reactive autoscaler subsystem is responsible for determining whether or not auto-scaling should proceed based on the given configuration. The reactive algorithm is built on top of the default horizontal pod autoscaler deployed by the container orchestration platform. The autoscaler is modified in such a way that it has its cooldown parameters are set to a moderate value to ensure adaptability to SLA-constrained scenarios, while also maintaining system stability. The workflow is shown below in algorithm \ref{alg:reactive-algo}. The algorithm takes the desired and current metrics as input, as well as the desired metrics, and outputs the decision to autoscale or not. It does this by computing the $tolerance$ value as shown in equation \ref{eqn:tolerance}. If this tolerance is above the configured threshold, the autoscaler will be modify the replicas, otherwise it will ignore the current auto-scaling request.\par
+The reactive autoscaler subsystem is responsible for determining whether or not auto-scaling should proceed based on the given configuration. The reactive algorithm's resource provisioning is built on top of the default horizontal pod autoscaler deployed by the container orchestration platform. The autoscaler is modified in such a way that it has its cooldown parameters are set to a moderate value to ensure adaptability to SLA-constrained scenarios, while also maintaining system stability. The workflow is shown below in algorithm \ref{alg:reactive-resource-provision}. The algorithm takes the current metric value as input, as well as the desired metric value, and outputs the decision to autoscale or not. It does this by computing the $tolerance$ value as shown in equation \ref{eqn:tolerance}. If this tolerance is above the configured threshold, the autoscaler will be modify the replicas, otherwise it will ignore the current auto-scaling request.\par
 
 %TC:ignore
 \begin{algorithm}
-    \caption{Reactive autoscaler subsystem workflow}
-    \label{alg:reactive-algo}
+    \caption{Reactive autoscaler resource provisioning workflow}
+    \label{alg:reactive-resource-provision}
     \textbf{Input}: $metric_{current},\, metric_{desired}$\\
     \textbf{Output}: $autoscale$
     \begin{algorithmic}
@@ -218,69 +225,70 @@ The forecaster portion of the autoscaler is used to generate this $metric_{forec
     \includegraphics[width=0.6\linewidth]{Figures/Data-Pre-Processing.png}
 \end{figure}
 
-To speed up the forecast process even further and reduce the resource and time requirements, the time-series data can be pre-processed to smoothen it. Doing so makes it easier for the deep learning model to extract patterns, and reduces the training and validation loss. Figure \ref{fig:data-pre-process} shows a graph containing raw input (shown in black), and a smoothened data curve (shown in red). While the red curve contains all the requisite information of the data (such as slope of the curve, maximum and minimum value, etc.), it removes the noise, reducing the overall loss, and reducing the length of the lookback LSTM needs to perform to accurately predict future data.\par
+To speed up the forecast process even further and reduce the resource and time requirements, the time-series data can be pre-processed to smoothen it. Doing so makes it easier for the deep learning model to extract patterns, and reduces the training and validation loss. Figure \ref{fig:data-pre-process} shows a graph containing raw input (shown in black), and a smoothened data curve (shown in red). While the red curve contains all the requisite information of the data (such as slope of the curve, maximum and minimum value, etc.), it removes the noise, reducing the overall loss, and reducing the length of the training window data sequence the LSTM requires in order to accurately predict future data.\par
 
-Based on the investigations above, it was determined that LSTM time-series forecasters would be ideally suited for a proactive autoscaler designed for edge computing. Algorithm \ref{alg:proactive-forecast-alg} shows the implementation of such a forecaster. As input, the algorithm takes the variable $lookback$, which is the number of data points it should use as a window to train, $forecast$, which is the number of data points to predict, the training time $epochs$, and the $learning\_rate$, which determines the step size per each training iteration moving towards the minimum loss value. The algorithm outputs the $result$, which is an array of size $forecast$ which contains all the predicted values. The algorithm implements a control loop every $\mathcal{P}$ seconds, where it requests the latest time series data from the autoscaler daemon. It then pre-processes this data to remove the noise as shown above, and performs one iteration of training using the configured parameters. It then computes the validation loss when doing so, and accepts this model as the ideal one if it has lower validation loss than the previous iteration, otherwise rejecting the model and using the older one instead. Finally, the model predicts the future forecasts and returns them to the autoscaler daemon for later use.\par
+Based on the investigations above, it was determined that LSTM time-series forecasters would be ideally suited for a proactive autoscaler designed for the hybrid autoscaler architecture. Algorithm \ref{alg:proactive-forecast-alg} shows the implementation of such a forecaster.\par
+
+As input, the algorithm takes the variable $lookback$, which is the number of data points it should use as a window to train, the training time $epochs$, and the $learning\_rate$, which determines the step size per each training iteration moving towards the minimum loss value. The algorithm outputs the $metric_{forecast}$, which is the metric value predicted by the LSTM based on the training process.\par
+
+The daemon periodically scrapes the windowed data stored in the cloud database to keep a form of cached time-series workload. It combines this workload with the future workload generated by the forecaster. The daemon can then request the $metric_{forecast}$ value for a specified time $\mathcal{T}$, and the proactive forecaster sends this value back after model pre-processing and training.\par
+
+The autoscaler daemon implements a control loop every $\mathcal{P}$ seconds, where it requests the latest time-series metric prediction from the forecaster. The forecaster then pre-processes this data to remove the noise as shown above, and performs one iteration of training using the configured parameters. It then computes the validation loss when doing so, and accepts this model as the ideal one if it has lower validation loss than the previous iteration, otherwise rejecting the model and using the older one instead. Finally, the model predicts the future metric and returns it to the autoscaler daemon for determining the auto-scaling based on algorithm \ref{alg:scheduling-logic-daemon}.\par
 
 %TC:ignore
 \begin{algorithm}
     \caption{Proactive forecaster algorithm}
     \label{alg:proactive-forecast-alg}
-    \textbf{Input}: $lookback \geq 0, forecast \geq 0, 0 \leq epochs \leq 100, 0 \leq learning\_rate \leq 1$\\
-    \textbf{Output}: $result$
-    \begin{algorithmic}
-        \State $lstm\_model \gets lstm.initialize()$
-        \State $result \gets \varnothing$
-        \While{$true$}
-            \State $time\_series \gets get\_latest\_data()$
-            \State $lstm\_input \gets get\_input(time\_series\_data, lookback)$
-            \State $lstm\_input \gets preprocess\_data(lstm\_input)$
-            \State $new\_model \gets train(lstm\_input, epochs, learning\_rate)$
-            \If{$validation\_loss(new\_model) < validation\_loss(lstm\_model)$}
-                \State $lstm\_model \gets new\_model$
-            \EndIf
-            \State $result \gets predict(lstm\_model, lstm\_input, forecast)$
-            \State \Call{wait}{$\mathcal{P}$}
-        \EndWhile
-    \end{algorithmic}
-\end{algorithm}
-%TC:endignore
-
-Finally, the other two sub-systems of the autoscaler daemon architecture help the proactive forecaster increase its prediction accuracy. It consists of the decision making and feedback loop of the proactive forecaster, and the storage of time-series data of the edge node.\par
-
-%TC:ignore
-\begin{algorithm}
-    \caption{Get predicted CPU value at time $\mathcal{T}$}
-    \label{alg:get-forecast-value}
-    \textbf{Input}: $\mathcal{T} > 0$\\
+    \textbf{Input}: $lookback \geq 0, 0 \leq epochs \leq 100, 0 \leq learning\_rate \leq 1$\\
     \textbf{Output}: $metric_{forecast}$
     \begin{algorithmic}
-        \State $time\_series \gets [ \vartheta_1, \vartheta_2 .. \vartheta_n ]$
-        \State $current\_time \gets get\_time()$
-        \State $threshold \gets \omega$
-        \State $metric_{forecast} \gets 0$
-        \State $closest\_index \gets time\_series.get\_index(\mathcal{T}, current\_time, threshold)$
-        \If{$time\_series[closest\_index] exists$}
-            \State $metric_{forecast} \gets time\_series[closest\_index]$
+        \State $lstm\_model \gets lstm.initialize()$
+        \State $time\_series \gets get\_latest\_data()$
+        \State $lstm\_input \gets get\_input(time\_series\_data, lookback)$
+        \State $lstm\_input \gets preprocess\_data(lstm\_input)$
+        \State $new\_model \gets train(lstm\_input, epochs, learning\_rate)$
+        \If{$validation\_loss(new\_model) < validation\_loss(lstm\_model)$}
+            \State $lstm\_model \gets new\_model$
         \EndIf
+        \State $metric_{forecast} \gets lstm\_model.predict(lstm\_input)$
         \State \Return $metric_{forecast}$
     \end{algorithmic}
 \end{algorithm}
 %TC:endignore
 
-The time series data not only includes the historical resource data, but also the predicted data created by the forecaster. The daemon periodically scrapes the windowed data stored in the cloud database to keep a form of cached time-series workload. It combines this workload with the future workload generated by the forecaster. The proactive autoscaler can then request the future workload for a specified time $\mathcal{T}$, and the daemon either sends back the forecasted value, or $0$ if it does not exist. Algorithm \ref{alg:get-forecast-value} depicts this process. The algorithm computes the nearest index in the time-series forecasted data containing the value. The nearest index is limited to a certain threshold, so that the time difference between what is requested, and what is computed is not too large since that would cause an error in the autoscaling. If this index exists in the data, the resource value is returned to the autoscaling daemon to be served to the proactive autoscaler, otherwise the default value of $0$ is sent.
+The proactive subsystem's resource provisioning module works in a similar manner to the reactive autoscaler. If the autoscaler daemon's scheduling logic determines that a proactive auto-scaling must take place, it requests the cloud layer to proceed with auto-scaling using the proactive subsystem's resource provisioning, which is shown in algorithm \ref{alg:proactive-resource-provision}. The algorithm takes the desired and forecast metric values as input, and outputs the decision to autoscale or not. It does this by computing the $tolerance$ value as shown in equation \ref{eqn:tolerance}. If this tolerance is above the configured threshold, the autoscaler will be modify the replicas, otherwise it will ignore the current auto-scaling request.\par
 
 %TC:ignore
 \begin{algorithm}
-    \caption{SLA-based feedback loop for proactive forecaster}
+    \caption{Proactive autoscaler resource provisioning workflow}
+    \label{alg:proactive-resource-provision}
+    \textbf{Input}: $metric_{forecast},\, metric_{desired}$\\
+    \textbf{Output}: $autoscale$
+    \begin{algorithmic}
+        \State $tolerance \gets \abs{ \frac{metric_{desired} - metric_{forecast}}{metric_{desired}} }$
+        \If{$tolerance > \gamma$}
+            \State $autoscale \gets Yes$
+        \Else
+            \State $autoscale \gets No$
+        \EndIf
+        \State \Return $autoscale$
+    \end{algorithmic}
+\end{algorithm}
+%TC:endignore
+
+Finally, the last hybrid autoscaler subsystem is the autoscaler daemon's SLA-based heuristic feedback loop, which assists the proactive forecaster in increasing its prediction accuracy. The autoscaler constantly checks for SLA-violations in the edge deployment using a control loop. Typically, the SLA checks are done for a sufficiently lengthy period of time such as one day. If an SLA violation is found, it is concluded that the application was unable to autoscale quickly enough to avoid the cold start problem. This could be due to a number of causes, such as insufficient training data, or the LSTM hyper-parameters being too conservative. To temporarily boost learning, the daemon then decreases the learning rate to increase the probability of the model escaping from the local minima to find the global one, increases the batch size to reduce under-fitting, and increases the number of epochs to reduce loss. All these parameters have a threshold, as increasing or decreasing certain parameters by a large amount may lead to issues such as over-fitting or infeasibly lengthy training times.\par
+
+%TC:ignore
+\begin{algorithm}
+    \caption{Autoscaler daemon SLA-based heuristic feedback loop}
     \label{alg:sla-heuristic-feedback}
-    \textbf{Input}: $SLA\_violation\_count,\,learning\_rate,\,batch\_size,\,epochs$\\
+    \textbf{Input}: $\mathcal{V},\,learning\_rate,\,batch\_size,\,epochs$\\
     \textbf{Output}: $hyperparameters_{modified}$
     \begin{algorithmic}
         \State $initial\_rate \gets learning\_rate$
         \State $initial\_batch \gets batch\_size$
         \State $initial\_epochs \gets epochs$
-        \If{$SLA\_violation\_count$ > 0}
+        \If{$\mathcal{V}$ > 0}
             \State $batch\_size \gets MAX(batch\_size + \alpha, \mathcal{A})$
             \State $learning\_rate \gets MIN(learning\_rate - \beta, \mathcal{B})$
             \State $epochs \gets MIN(epochs - \lambda, \mathcal{L})$
@@ -295,16 +303,20 @@ The time series data not only includes the historical resource data, but also th
 \end{algorithm}
 %TC:endignore
 
-The final component of the autoscaler daemon is the SLA-based feedback for the proactive forecaster. The autoscaler constantly checks for SLA-violations in the edge deployment using a control loop. Typically, the SLA checks are done for a sufficiently lengthy period of time such as one day. If an SLA violation is found, it is concluded that the application was unable to autoscale quickly enough to avoid the cold start problem. This could be due to a number of causes, such as insufficient training data, or the LSTM hyper-parameters being too conservative. To temporarily boost learning, the daemon then decreases the learning rate to increase the probability of the model escaping from the local minima to find the global one, increases the batch size to reduce under-fitting, and increases the number of epochs to reduce loss. All these parameters have a threshold, as increasing or decreasing certain parameters by a large amount may lead to issues such as over-fitting or infeasibly lengthy training times. Finally, if the feedback control loop discovers that no SLA-violations occurred during the time-period, it concludes that the LSTM has sufficiently learned the primary characteristics of the time-series. As discussed by Siami-Namini et al. \cite{siami2018comparison}, the ``rolling-updates'' feature of LSTM allows the autoscaler to safely reset the hyper-parameters of the model, while preserving the learning and weights of the previous rounds of training. Algorithm \ref{alg:sla-heuristic-feedback} shows how the heuristic feedback is set up. The algorithm takes the three hyper-parameters of the LSTM, namely $learning\_rate$, $batch\_size$, and $epochs$, along with the $sla\_violation\_count$ which stores the number of SLA violations which occurred during a specified time window. Using these parameters, the algorithm computes the new LSTM hyper-parameters and outputs them to the proactive forecaster to use in the next training cycle.\par
+Finally, if the feedback control loop discovers that no SLA-violations occurred during the time-period, it concludes that the LSTM has sufficiently learned the primary characteristics of the time-series. As discussed by Siami-Namini et al. \cite{siami2018comparison}, the ``rolling-updates'' feature of LSTM allows the autoscaler to safely reset the hyper-parameters of the model, while preserving the learning and weights of the previous rounds of training. Algorithm \ref{alg:sla-heuristic-feedback} shows how the heuristic feedback is set up. The algorithm takes the three hyper-parameters of the LSTM, namely $learning\_rate$, $batch\_size$, and $epochs$, along with the $\mathcal{V}$ which stores the number of SLA violations which occurred during a specified time window. Using these parameters, the algorithm computes the new LSTM hyper-parameters and outputs them to the proactive forecaster to use in the next training cycle.\par
 
 \subsection{Space Time Complexity}
 \label{subsec:ch3-space-time-comp}
 
-Assuming the hybrid autoscaler $\mathcal{H}$ takes a time-series data of length $\mathcal{N}$, it stores this data in an array data structure. The rest of the inputs are single variables. Thus the space complexity can be easily computed for this information. The variables each have a space complexity of $O(1)$. Meanwhile, the time-series array has a complexity of $\mathcal{O}(N)$. Thus, the space complexity can be written as the sum of the two values, and simplified.
+To analyse the space and time complexity of the auto-scaling architecture, some simplifying assumptions must be made. Firstly, the complexities will be for one control loop of the container orchestration platform. By default, controller orchestration platforms have control loops which are executed every 15 seconds. During each of these loops, auto-scaling is assessed and implemented. Thus we will ignore the complexities involved in the control loop itself, and focus only on the autoscaler.\par
 
-\[Complexity_{space}(\mathcal{H}) = \mathcal{O}(N) + \mathcal{O}(1)\]
+Secondly, for the proactive forecaster, the complexities of the LSTM are simplified to the basic multiplicative steps involved in the training step. Other internal logic such as the $\sigma$ function are assumed to have $\mathcal{O}(1)$ space and time complexity.\par
+
+Finally, assuming the hybrid autoscaler $\mathcal{H}$ takes a time-series data of length $\mathcal{N}$, it stores this data in an array data structure. The rest of the inputs can be considered as single variables. The forecaster's LSTM weights are assumed to be a two dimensional matrix of size $A \times B$. Thus the space complexity can be easily computed for this information. The variables each have a space complexity of $O(1)$. Meanwhile, the time-series array has a complexity of $\mathcal{O}(N)$, and the weights are of complexity $\mathcal{O}(N^2)$. Thus, the space complexity can be written as the sum of the two values, and simplified.
+
+\[Complexity_{space}(\mathcal{H}) = \mathcal{O}(N^2) + \mathcal{O}(N) + \mathcal{O}(1)\]
 \begin{equation}
-    \Rightarrow Complexity_{space}(\mathcal{H}) = \mathcal{O}(N)
+    \Rightarrow Complexity_{space}(\mathcal{H}) = \mathcal{O}(N^2)
 \end{equation}
 
 The time complexity is a more complex calculation. The complexities of the reactive autoscaler, proactive autoscaler, and autoscaler daemon need to be computed. The autoscaler daemon only stores the time-series array, and computes the new hyper-parameters in algorithm \ref{alg:sla-heuristic-feedback}. Both of these operations can be completed in constant time, thus the time complexity for the daemon is as follows:
@@ -319,33 +331,39 @@ Similarly, the reactive autoscaler only computes the tolerance value, which is a
     Complexity_{time}(reactive) = \mathcal{O}(1)
 \end{equation}
 
-For the proactive autoscaler, the forecaster internally computes matrix multiplications, such as of the various LSTM weights and vectors. For example, take the equation \ref{eqn:input-gate}. In the equation, we assume the dimension of the variables as follows:
+For the proactive autoscaler, the forecaster internally computes matrix multiplications, such as of the various LSTM weights and vectors. For example, take the equation \ref{eqn:input-gate}. The equation can be unrolled to be written as follows.
+
+\begin{equation}
+    i_{t} = \sigma(W_{i}(x) \cdot x_{t} + W_{i}(h) \cdot h_{t-1} + b_{i})
+\end{equation}
+
+In the equation, we assume the dimension of the variables as follows:
 
 \begin{itemize}
-    \item $W_{i} \in \R^{m \times n}$
+    \item $W_{i}(x) \in \R^{m \times n}$
     \item $x_{t} \in \R^{n}$
+    \item $W_{i}(h) \in \R^{m \times m}$
     \item $b_{i} \in \R^{m}$
     \item $h_{t-1} \in \R^{m}$
 \end{itemize}
 
 Using these values, the time complexity of each of the individual multiplicative and additive operations can be computed.
 
-\begin{itemize}
-    \item $Complexity_{time}(W_{i} \cdot x_{t}) = \mathcal{O}(mn)$
-    \item $Complexity_{time}(W_{i} \cdot h_{t-1}) = \mathcal{O}(mn)$
-    \item $Complexity_{time}(W_{i} \cdot [x_{t}, h_{t-1}]) = \mathcal{O}(mn + mn + m)$
-\end{itemize}
+\[Complexity_{time}(W_{i}(x) \cdot x_{t}) = \mathcal{O}(mn)\]
+\[Complexity_{time}(W_{i}(h) \cdot h_{t-1}) = \mathcal{O}(m^2)\]
+\begin{equation}
+    Complexity_{time}(W_{i} \cdot [x_{t}, h_{t-1}] + b_{i}) = \mathcal{O}(mn + m^2 + m)
+\end{equation}
 
 Therefore the complexity of the proactive component can be written as:
 
-\[Complexity_{time}(proactive) = \mathcal{O}(mn + mn + m)\]
-\[\Rightarrow Complexity_{time}(proactive) = \mathcal{O}(2mn + m)\]
-\[\Rightarrow Complexity_{time}(proactive) = \mathcal{O}(m \times n)\]
+\[Complexity_{time}(proactive) = \mathcal{O}(mn + m^2 + m)\]
+\[\Rightarrow Complexity_{time}(proactive) = \mathcal{O}(m \times (m + n + 1))\]
 \begin{equation}
     \Rightarrow Complexity_{time}(proactive) = \mathcal{O}(N^2)
 \end{equation}
 
-This 
+This is the value of one training iteration. For an LSTM training process with $\tau$ training steps, the complexity becomes $\mathcal{O}(\tau N^2)$. However, it is important to note that the value of $\tau$ is a constant, thus the final proactive complexity can be reduced back to $\mathcal{O}(N^2)$.\par
 
 Combining the time complexities of all three hybrid components, the final complexity for the hybrid autoscaler $\mathcal{H}$ can be re-written as:
 
