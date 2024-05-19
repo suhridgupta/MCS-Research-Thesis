@@ -203,7 +203,7 @@ The final baseline algorithm to be deployed for auto-scaling $home-timeline-serv
     \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Proactive-Latency.png}
 \end{figure}
 
-Because the autoscaler was purely proactive, it must be a deep LSTM model with several layers and large training epochs. This deep model took more than 20 minutes to properly train and validate for it to predict 24 hours of data, similar to the length of data that our proposed hybrid solution predicted. This is due to the edge architectures lack of resources and storage compared to the cloud layer. Figure \ref{fig:exp1-proactive-k8s} shows this in action. Initially it is observed that the latency continually spiked, causing a large amount of SLA violations, more than what the reactive autoscaler caused. However, after a few days of training, the rolling update structure of the LSTM weights took over, reducing the training time by taking advantage of the early stopping callback in the LSTM model, and managing to stabilize the latency. However, this affect did not always manage to stem the latency overflow, as was shown when the same algorithm was tested using the POST API in section \ref{subsec:ch5-exp2-proactive-algo}.
+Because the autoscaler was purely proactive, it must be a deep LSTM model with several layers and large training epochs. This deep model took more than 50 minutes to properly train and validate for it to predict 24 hours of data, similar to the length of data that our proposed hybrid solution predicted. This is due to the edge architectures lack of resources and storage compared to the cloud layer. Figure \ref{fig:exp1-proactive-k8s} shows this in action. Initially it is observed that the latency continually spiked, causing a large amount of SLA violations, more than what the reactive autoscaler caused. However, after a few days of training, the rolling update structure of the LSTM weights took over, reducing the training time by taking advantage of the early stopping callback in the LSTM model, and managing to stabilize the latency. However, this affect did not always manage to stem the latency overflow, as was shown when the same algorithm was tested using the POST API in section \ref{subsec:ch5-exp2-proactive-algo}.
 
 While the SLA violations were not as severe as the ones seen in the Default autoscaler baseline, they were comparatively greater than the reactive approach, with the latency exceeding 200 milliseconds for several minutes during the day, causing a loss of availability. The average latency was almost as large as what was seen in the default autoscaler baseline, approaching 50 milliseconds due to the issues inherent in attempting to forecast the entire time-series data curve.  Due to these issues, the algorithm itself was demonstrated as unsuitable for SLA-constrained paradigms.\par
 
@@ -278,7 +278,7 @@ In conclusion, the hybrid approach proved to be the best autoscaler when it came
 
 %TC:ignore
 \begin{table}
-    \caption{GET Request SLA Violation Counts}\label{tab:exp1-sla-violation-count}
+    \caption{Experiment I - SLA Violation Counts}\label{tab:exp1-sla-violation-count}
     \centering
     \begin{tabular}{|l|l|l|l|}
         \hline
@@ -451,7 +451,7 @@ This meant that over the two experiments and three SLA thresholds, the hybrid ap
 
 %TC:ignore
 \begin{table}
-    \caption{POST Request SLA Violation Counts}\label{tab:exp2-sla-violation-count}
+    \caption{Experiment II - SLA Violation Counts}\label{tab:exp2-sla-violation-count}
     \centering
     \begin{tabular}{|l|l|l|l|}
         \hline

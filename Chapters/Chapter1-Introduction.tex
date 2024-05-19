@@ -25,9 +25,9 @@ Edge computing deploys several lightweight computing devices known as cloudlets 
     \label{fig:edge-architecture-overview}
 \end{figure}
 
-One method of mitigating this scaling latency is through the use of micro-service applications. By employing a microservice architecture, the resources in a cloudlet are a collection of smaller deployments that are both independent and loosely coupled \cite{villamizar2015evaluating}. This loose coupling ensures that parts of the cloudlet can be scaled as is required, further reducing the time required to scale resources as compared to scaling the cloudlet monolithically.\par
+One method of mitigating this scaling latency is through the use of micro-service applications. By employing a micro-service architecture, the resources in a cloudlet are a collection of smaller deployments that are both independent and loosely coupled \cite{villamizar2015evaluating}. This loose coupling ensures that parts of the cloudlet can be scaled as is required, further reducing the time required to scale resources as compared to scaling the cloudlet monolithically.\par
 
-The scaling of these microservice resources is done automatically through a process known as autoscaling. While most microservice applications come bundled with default autoscaling solutions, and these solutions are sufficient for most applications, they fall apart when scaling resources for time-sensitive services such as the ones used in healthcare require stringent compliance to service level agreements (SLA) on metrics such as application latency. This has led to further research on autoscaling solutions for edge computing applications. These primarily fall into two categories. Reactive autoscaling solutions attempt to modify the microservice resource allocation once the required resources exceed the current allocation. These algorithms are simple to develop and deploy, however, the time taken to scale resources leads to a degradation of resource availability and violates SLA compliance \cite{podolskiy2018iaas}. To counteract these pitfalls, proactive autoscaling solutions attempt to model resource allocation over time and effectively predict the resource requirements. By doing so, the microservice resources can be scaled in advance through a process known as ``cold starting''. This approach removes the latency inherent in scaling resources, however, the algorithms are extremely complex to develop, train as well as tune to specific edge applications \cite{straesser2022not}.
+The scaling of these micro-service resources is done automatically through a process known as auto-scaling. While most micro-service applications come bundled with default autoscaling solutions, and these solutions are sufficient for most applications, they fall apart when scaling resources for time-sensitive services such as the ones used in healthcare require stringent compliance to service level agreements (SLA) on metrics such as application latency. This has led to further research on auto-scaling solutions for edge computing applications. These primarily fall into two categories. Reactive auto-scaling solutions attempt to modify the micro-service resource allocation once the required resources exceed the current allocation. These algorithms are simple to develop and deploy, however, the time taken to scale resources leads to a degradation of resource availability and violates SLA compliance \cite{podolskiy2018iaas}. To counteract these pitfalls, proactive auto-scaling solutions attempt to model resource allocation over time and effectively predict the resource requirements. By doing so, the micro-service resources can be scaled in advance through a process known as ``cold starting''. This approach removes the latency inherent in scaling resources, however, the algorithms are extremely complex to develop, train as well as tune to specific edge applications \cite{straesser2022not}.
 
 \section{Problem Overview}
 \label{sec:problem-overview}
@@ -36,17 +36,17 @@ To tackle these challenges, this thesis proposes a hybrid approach that combines
 
 Thus, the project aimed to answer the following questions in a satisfactory manner:
 \begin{itemize}
-    \item \textbf{\textit{RQ1:}} Can we integrate reactive and proactive autoscaling methods to develop a tailored algorithm for edge computing that eliminates the requirement for developers to fine-tune hyper-parameters for each autoscaling use case while being lightweight enough to be deployed and run on cloudlets?
-    \item \textbf{\textit{RQ2:}} Can the hybrid autoscaling solution achieve or exceed the SLA compliance capabilities of state-of-the-art reactive and proactive autoscaling solutions for edge computing while minimizing the degradation of application performance?
+    \item \textbf{\textit{RQ1:}} Can we integrate reactive and proactive auto-scaling methods to develop a tailored algorithm for edge computing that eliminates the requirement for developers to fine-tune hyper-parameters for each auto-scaling use case while being lightweight enough to be deployed and run on cloudlets?
+    \item \textbf{\textit{RQ2:}} Can the hybrid auto-scaling solution achieve or exceed the SLA compliance capabilities of state-of-the-art reactive and proactive auto-scaling solutions for edge computing while minimizing the degradation of application performance?
 \end{itemize}
 
-In summary, the following contributions are thus made in this thesis:
+The thesis structure was designed based on the general guidelines provided by Gruba and Zobel \cite{gruba2017write}. In summary, the following contributions were thus made in this thesis:
 
 \begin{itemize}
-    \item Propose a hybrid autoscaling method that mitigates the challenges present in reactive and proactive methods.
+    \item Propose a hybrid auto-scaling method that mitigates the challenges present in reactive and proactive methods.
     \item The algorithm is implemented as an extension to Kubernetes.
     \item Deploy this algorithm in a real edge cluster prototype.
-    \item Conduct extensive experiments using realistic daily workloads on the prototype microservice application.
+    \item Conduct extensive experiments using realistic daily workloads on the prototype micro-service application.
     \item Compare the SLA violations of the cutting-edge reactive, proactive, and hybrid algorithms for three separate categories.
     \item Propose future work and possible extensions to the algorithm.
 \end{itemize}

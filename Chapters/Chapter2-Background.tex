@@ -140,11 +140,9 @@ Recurrent Neural Networks store information about the past, and its future decis
 \begin{figure}[htb]
     \centering
     \caption{Recurrent Neural Network Architecture}
-    \includegraphics[width=.4\linewidth]{Figures/RNN-Overview.png}
+    \includegraphics[width=1.0\linewidth]{Figures/RNN-Overview.png}
     \label{fig:rnn-architecture}
 \end{figure}
-
-\suhrid{TODO: Unfold RNN image and show the image from intro to rnn page}
 
 For the current RNN state, the formula can be written as follows:
 
@@ -171,14 +169,14 @@ RNN also employs a back-propagation algorithm during training. However, the para
 Long Short-Term Memory or LSTM is a deep learning model which is enhanced from the traditional RNN architecture. In an RNN function, the hidden state activation is influenced by nearby activation functions. This is known as the ``short-term'' memory. Meanwhile the overall network weights are influenced by the computations which occur over the entire long data sequence.\par
 
 \suhrid{TODO: Fix LSTM cell architecture image}
-%\begin{figure}[htb]
-%    \centering
-%    \caption{LSTM Cell Architecture}
-%    \includegraphics[width=.6\linewidth]{Figures/LSTM-Cell-Architecture.png}
-%    \label{fig:lstm-cell-architecture}
-%\end{figure}
+\begin{figure}[htb]
+    \centering
+    \caption{LSTM Cell Architecture}
+    \includegraphics[width=0.8\linewidth]{Figures/LSTM-Cell-Architecture.png}
+    \label{fig:lstm-cell-architecture}
+\end{figure}
 
-LSTMs are designed in a way which avoids the long-term dependency problem by integrating a cell state into the architecture. The cell state acts as a conveyor belt of information, allowing information to be passed along the different data sequences easily. Information is added to or removed from the cell state using structures known as gates. These gates are created from a sigmoid layer, and a point-wise multiplication operation. The LSTM architecture has three gates for performing cell state operations. These are the ``Forget gate'', ``Input gate'', and ``Output gate''.\par
+LSTMs are designed in a way which avoids the long-term dependency problem by integrating a cell state into the architecture. The cell state acts as a conveyor belt of information, allowing information to be passed along the different data sequences easily. Information is added to or removed from the cell state using structures known as gates. These gates are created from a sigmoid layer, and a point-wise multiplication operation. The LSTM architecture has three gates for performing cell state operations. These are the ``Forget gate'', ``Input gate'', and ``Output gate''. Figure \ref{fig:lstm-cell-architecture} shows the structure of these cell state operations.\par
 
 The forget gate determines the amount of past information the LSTM should retain. This decision is made through the use of a sigmoid function, and the gate output $f_{t}$ is given through the equation:
 
