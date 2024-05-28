@@ -7,7 +7,7 @@
 \chapter{\chaptertitle}
 \label{ch:experimental-setup}
 
-Based on the previous high-level overview of the architectures and algorithms involved, in this chapter we will first discuss the micro-service application architecture used to test the auto-scaling on, along with its features in section \ref{sec:ch4-microservice-overview}. With this background, section \ref{sec:ch4-data-generation} will give an explanation of the workload generator bundled along with the micro-service deployment, and how that was used to generate the time-series workload typically seen in edge deployments. Finally, we will discuss the technical configurations of the hybrid autoscaler itself in section \ref{sec:ch4-hybrid-auto-arch}. This will involve how the workload information is communicated between cloud and edge layers, how the autoscaler parameters for both reactive and proactive subsystems are configured, and how the forecaster is configured to use the time-series data to generate forecast values for a sufficiently large time-period to minimize training times even further. Finally, the hyper-parameter tuning configured by the autoscaler daemon will be further elaborated.
+Based on the previous high-level overview of the architectures and algorithms involved, in this chapter we will first discuss the micro-service application architecture used to test the auto-scaling on, along with its features in section \ref{sec:ch4-microservice-overview}. With this background, section \ref{sec:ch4-data-generation} will give an explanation of the workload generator bundled along with the micro-service deployment, and how that was used to generate the time-series workload typically seen in edge deployments. Finally, we will discuss the technical configurations of the hybrid autoscaler itself in section \ref{sec:ch4-hybrid-auto-arch}. This will involve how the workload information is communicated between cloud and edge layers, how the autoscaler parameters for both reactive and proactive subsystems are configured, and how the forecaster is configured to use the time-series data to generate forecast values for a sufficiently large time-period to minimize training times even further. Finally, the hyper-parameter tuning configured by the autoscaler controller will be further elaborated.
 
 \section{Micro-service Overview}
 \label{sec:ch4-microservice-overview}
@@ -61,7 +61,6 @@ In this experiment, it is assumed that the workload peaks in the morning and eve
 
 To achieve this, an IoT workload algorithm was created for leveraging the wrk2 generator to achieve this time-series. This is explained in algorithm \ref{alg:work-gen}. A constant light workload is set for night time consisting of six hours between 12:00am and 06:00 am, while different workloads for the eighteen different day time hours are set, with peaks set in the morning and evening, and dips in the afternoon. The algorithm also contains a small random ``offset'' variable to depict the randomness inherent in the workload. This is depicted using the function $\mathcal{F}$, where $\mathcal{F}(0,1)$ returns a random number between 0 and 1. This workload is then executed using the wrk2 generator to apply the HTTP load on the micro-service.
 
-%TC:ignore
 \begin{algorithm}
     \caption{IoT workload generation algorithm}
     \label{alg:work-gen}
@@ -79,7 +78,6 @@ To achieve this, an IoT workload algorithm was created for leveraging the wrk2 g
         \EndWhile
     \end{algorithmic}
 \end{algorithm}
-%TC:endignore
 
 \section{Hybrid Autoscaler Configuration}
 \label{sec:ch4-hybrid-auto-arch}
@@ -92,12 +90,12 @@ With the Kubernetes container orchestration now installed on the servers, and th
 
 The default Kubernetes autoscaler has built-in API services to communicate with the micro-service deployments, along with any other telemetry deployed on the platform. These include built-in default metrics such as CPU and memory usages of the deployment. However, the proposed hybrid autoscaler must have these services custom deployed. Furthermore, to keep a track of custom metrics such as the SLA latency of various micro-service deployment modules, these metrics need to be extracted from the social-network in a time-series compliant manner. Thus, before describing the autoscaler configuration, a brief explanation of how the micro-service metrics are exported to Kubernetes in a manner in which they can be consumed by all other systems is discussed. Once that is explained, and the deployment is shown, the technical configurations, along with code-snippets of the various autoscaler subsystems can be laid out and discussed thoroughly.\par
 
-\subsection{Custom Metrics Export To Kubernetes}
+\subsection{Exporting Custom Metrics to Kubernetes}
 \label{subsec:metrics-export}
 
 The social media application comes bundled with a deployment known as Jaeger \footnote{\url{https://www.jaegertracing.io/}}. Jaeger is an open-source distributed tracing platform, capable of tracking several application metrics of each network request and per-micro-service request. It then stores these metrics in a centralized database. One such metric which is critical for the functioning of the autoscaler is the details of API latency for the application. The latency information is extremely detailed, and is broken down per each component in the social media architecture layers as defined by figure \ref{fig:social-network-arch}. Alongside the latency breakdown, Jaeger can automatically generate graphs of the various components which are utilized to serve the API requests. This is particularly useful for identifying deployment bottlenecks in the architecture which are prime targets for auto-scaling.\par
 
-Before this latency information can be useful in the auto-scaling solution, it must be imported to Kubernetes in a readable format. This was achieved through the use of a tool called Prometheus. Prometheus \footnote{\url{https://prometheus.io/docs/introduction/overview/}} is an open-source deployment used for monitoring micro-services and their applications. Prometheus consists of a multi-dimensional data model for storing time-series data through the use of key/value pairs, a custom built querying language known as PromQL which is used to leverage and search through this data model, and a graphing and dashboard user interface to aid in visualization. Prometheus allows for complex queries to be run on the real-time data, however due to the resource intensive nature of the deployment, Prometheus must be deployed on the cloud layer. That is the approach this experiment took, and Prometheus acted as the central database from which the autoscaler daemon would periodically scrape social network metric data from for use by the auto-scaling components.\par
+Before this latency information can be useful in the auto-scaling solution, it must be imported to Kubernetes in a readable format. This was achieved through the use of a tool called Prometheus. Prometheus \footnote{\url{https://prometheus.io/docs/introduction/overview/}} is an open-source deployment used for monitoring micro-services and their applications. Prometheus consists of a multi-dimensional data model for storing time-series data through the use of key/value pairs, a custom built querying language known as PromQL which is used to leverage and search through this data model, and a graphing and dashboard user interface to aid in visualization. Prometheus allows for complex queries to be run on the real-time data, however due to the resource intensive nature of the deployment, Prometheus must be deployed on the cloud layer. That is the approach this experiment took, and Prometheus acted as the central database from which the autoscaler controller would periodically scrape social network metric data from for use by the auto-scaling components.\par
 
 %TC:ignore
 \begin{lstlisting}[
@@ -331,25 +329,69 @@ The proactive forecaster was a deep-learning machine learning model, which consi
 \end{table}
 %TC:endignore
 
-The step-by-step forecast procedure was done as follows. The data which was generated by the workload algorithm \ref{alg:work-gen} and stored in Prometheus was periodically queried and stored by the autoscaler daemon. An example of how this data may look over a period of four days is shown in figure \ref{fig:lstm-init-data}.
+The step-by-step forecast procedure was done as follows. The data which was generated by the workload algorithm \ref{alg:work-gen} and stored in Prometheus was periodically queried and stored by the autoscaler controller. An example of how this data may look over a period of four days is shown in figure \ref{fig:lstm-init-data}.
 
-\begin{figure}[htb]
-    \centering
-    \caption{Example of generated workload}
+\begin{center}
+\begin{minipage}{\linewidth}
+    \captionof{figure}{Example of generated historical workload}
     \label{fig:lstm-init-data}
-    \includegraphics[width=1.0\linewidth]{Figures/LSTM-Initial-Data.png}
-\end{figure}
+    \begin{tikzpicture}
+        \begin{axis}[
+            height=0.4\linewidth,
+            width=\linewidth,
+            xmin=0,
+            xmax=2220,  % Make xmax 150 above the final xtick
+            ymin=0,
+            ymajorgrids=true,
+            yminorgrids=true,
+            xmajorgrids=true,
+            xminorgrids=true,
+            grid style=dashed,
+            xlabel={Time (Days)},
+            ylabel={CPU Usage (\%)},
+            legend style={at={(0.5,-0.3)},anchor=north,legend columns=-1},
+            xticklabels={Day 1, Day 2, Day 3, Day 4},
+            xtick={600, 1080, 1530, 2000}
+        ]
+            \addplot+[blue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Initial-Data.csv};
+            \legend{Historical}
+        \end{axis}
+    \end{tikzpicture}
+\end{minipage}
+\end{center}
 
 This data has two major peaks during the morning and evening, with one smaller peak in the afternoon. The night time workload is consistently minimal. Due to the randomness included in the algorithm, each of the peaks are never the exact same, which helps mimic the real data an edge architecture would experience. However, this data has several abrupt changes every few minutes, for example the utilization could be 100\% at 5:00pm, then suddenly drop down to 75\% at 5:10pm, before coming back up to 110\% at 5:20pm. These abrupt changes makes it difficult for the LSTM to be able to accurately predict the future workloads, and requires a much larger input window sequence to reduce model loss, which can significantly drive up training times to an unfeasible amount.\par
 
 To get around this issue, the proactive autoscaler introduced a data pre-processing component. This involved the use of noise reduction and data smoothing algorithm. This was done through a popular algorithm known as the Savitzky-Golay filter \cite{savitzky1964smoothing}. This filter takes $N$ points in a given time-series, with a filter width $w$, and calculates a polynomial average of order $o$ \cite{schafer2011savitzky}. The resulting time-series data which can be seen in figure \ref{fig:lstm-smooth-data} has considerably less deviations between consecutive points, and devoid of noise.\par
 
-\begin{figure}[htb]
-    \centering
-    \caption{Example of pre-processed workload}
+\begin{center}
+\begin{minipage}{\linewidth}
+    \captionof{figure}{Example of pre-processed workload}
     \label{fig:lstm-smooth-data}
-    \includegraphics[width=1.0\linewidth]{Figures/LSTM-Smooth-Data.png}
-\end{figure}
+    \begin{tikzpicture}
+        \begin{axis}[
+            height=0.4\linewidth,
+            width=\linewidth,
+            xmin=0,
+            xmax=2220,  % Make xmax 150 above the final xtick
+            ymin=0,
+            ymajorgrids=true,
+            yminorgrids=true,
+            xmajorgrids=true,
+            xminorgrids=true,
+            grid style=dashed,
+            xlabel={Time (Days)},
+            ylabel={CPU Usage (\%)},
+            legend style={at={(0.5,-0.3)},anchor=north,legend columns=-1},
+            xticklabels={Day 1, Day 2, Day 3, Day 4},
+            xtick={600, 1080, 1530, 2000}
+        ]
+            \addplot+[blue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Smooth-Data.csv};
+            \legend{Pre-Processed Historical}
+        \end{axis}
+    \end{tikzpicture}
+\end{minipage}
+\end{center}
 
 The filtered data was then normalized to further remove the impact of scale between different applications, which helps generalize the autoscaler. The data was then ready to be used to train the model. Alongside the architecture configured in table \ref{tab:lstm-layers}, the LSTM model contained the following default hyper-parameter values depicted in table \ref{tab:lstm-params}.
 
@@ -375,15 +417,31 @@ The filtered data was then normalized to further remove the impact of scale betw
 \begin{center}
     \captionof{figure}{Loss and root mean squared error per training epoch}
     \label{fig:loss-mse-training}
-    \begin{tikzpicture}[scale=0.5]
-        \begin{axis}
-            \addplot table [x=Step, y=Value, col sep=comma] {Data/epoch_loss.csv};
+    \begin{tikzpicture}[scale=0.7]
+        \begin{axis}[
+            ymajorgrids=true,
+            yminorgrids=true,
+            xmajorgrids=true,
+            xminorgrids=true,
+            grid style=dashed,
+            xlabel={Iteration},
+            ylabel={Loss}
+        ]
+            \addplot table [x=Step, y=Value, mark=none, col sep=comma] {Data/epoch_loss.csv};
         \end{axis}
     \end{tikzpicture}
     \qquad
-    \begin{tikzpicture}[scale=0.5]
-        \begin{axis}
-            \addplot table [x=Step, y=Value, col sep=comma] {Data/epoch_root_mean_squared_error.csv};
+    \begin{tikzpicture}[scale=0.7]
+        \begin{axis}[
+            ymajorgrids=true,
+            yminorgrids=true,
+            xmajorgrids=true,
+            xminorgrids=true,
+            grid style=dashed,
+            xlabel={Iteration},
+            ylabel={Root Mean Squared Error}
+        ]
+            \addplot table [x=Step, y=Value, mark=none, col sep=comma] {Data/epoch_root_mean_squared_error.csv};
         \end{axis}
     \end{tikzpicture}
 \end{center}
@@ -396,29 +454,64 @@ A similar trend was seen in the weights and biases of the LSTM. Figure \ref{fig:
     \centering
     \caption{Training bias and weights per training epoch}
     \label{fig:bias-weight-training}
-    \begin{minipage}{0.45\linewidth}
+    \begin{minipage}{0.6\linewidth}
         \includegraphics[width=1.0\linewidth]{Figures/LSTM-Bias.png}
     \end{minipage}\hfill
-    \begin{minipage}{0.45\linewidth}
+    \begin{minipage}{0.6\linewidth}
         \includegraphics[width=1.0\linewidth]{Figures/LSTM-Weights.png}
     \end{minipage}
 \end{figure}
 
 The model training, validation and error comparison with previous model performances took approximately 3 minutes, after which the model predicted the subsequent day's forecast. Figure \ref{fig:lstm-final-data} shows how this looked. The forecaster accurately depicted the initial peaks for the entire day, including the morning, afternoon, and evening. It is clear however, that the rest of the data points may not be as accurate. This is not a significant drawback for the hybrid model, as the reactive algorithm is capable of making minor adjustments to the resources, ensuring that the SLA compliance is maintained.
 
+\begin{comment}
 \begin{figure}[htb]
     \centering
     \caption{Example of the forecasted workload}
     \label{fig:lstm-final-data}
     \includegraphics[width=1.0\linewidth]{Figures/LSTM-Final-Data.png}
 \end{figure}
+\end{comment}
 
-\subsection{Autoscaler Daemon}
+\begin{center}
+\begin{minipage}{\linewidth}
+    \captionof{figure}{Example of the historical and forecast workload}
+    \label{fig:lstm-final-data}
+    \begin{tikzpicture}
+        \begin{axis}[
+            height=0.4\linewidth,
+            width=\linewidth,
+            xmin=-150,
+            xmax=2460,  % Make xmax 150 above the final xtick
+            ymin=0,
+            ymajorgrids=true,
+            yminorgrids=true,
+            xmajorgrids=true,
+            xminorgrids=true,
+            grid style=dashed,
+            xlabel={Time (Days)},
+            ylabel={CPU Usage (\%)},
+            legend style={at={(0.5,-0.3)},anchor=north,legend columns=-1},
+            xticklabels={Day 1, Day 2, Day 3, Day 4, Day 5},
+            xtick={462, 924, 1386, 1848, 2310}
+        ]
+            \addplot+[blue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Final-Data-Value.csv};
+            \addplot+[RedOrange, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Final-Data-Forecast.csv};
+            %\draw[red, thick, dashed] (axis cs:0, 150) -- (axis cs:2472, 150);
+            \legend{Historical, Forecast}
+            %\addlegendimage{line width=0.3mm, dashed, color=red}
+            %\addlegendentry{Threshold}
+        \end{axis}
+    \end{tikzpicture}
+\end{minipage}
+\end{center}
+
+\subsection{Autoscaler Controller}
 \label{subsec:ch4-auto-daemon-subsection}
 
-The autoscaler daemon stored a maximum of seven days of data for use by the proactive forecaster. Data that is too old is not very useful for a time-series model training on semi-predictable data \cite{greff2016lstm}, and only increases training time without adding much to the accuracy. This data was refreshed once every day to ensure that the latest data was always available to the hybrid autoscalers before training. Since training only took place once a day, the costly metric scraping operations done by the daemon from the cloud layer could be reduced, thereby reducing the overall load on the network.\par
+The autoscaler controller stored a maximum of seven days of data for use by the proactive forecaster. Data that is too old is not very useful for a time-series model training on semi-predictable data \cite{greff2016lstm}, and only increases training time without adding much to the accuracy. This data was refreshed once every day to ensure that the latest data was always available to the hybrid autoscalers before training. Since training only took place once a day, the costly metric scraping operations done by the controller from the cloud layer could be reduced, thereby reducing the overall load on the network.\par
 
-The daemon sent a training request to the proactive autoscaler once every night. The time is chosen so that, due to the comparatively low amounts of user requests, the training process would be able to claim as much of the edge resources as possible without affecting the network availability. However, before sending the request, the daemon computed whether or not an SLA violation took place in the past 24 hours. If it detected a violation, it assumed that the forecaster had not learnt enough of the time-series features to make an accurate prediction. This could be due to a variety of reasons such as lack of training data or conservative parameter values. To counteract this, the daemon performed the following corrections:
+The controller sent a training request to the proactive autoscaler once every night. The time is chosen so that, due to the comparatively low amounts of user requests, the training process would be able to claim as much of the edge resources as possible without affecting the network availability. However, before sending the request, the controller computed whether or not an SLA violation took place in the past 24 hours. If it detected a violation, it assumed that the forecaster had not learnt enough of the time-series features to make an accurate prediction. This could be due to a variety of reasons such as lack of training data or conservative parameter values. To counteract this, the controller performed the following corrections:
 
 \begin{itemize}
     \item $learning\_rate$ was decreased by 0.0005, to a minimum value of 0.002.
