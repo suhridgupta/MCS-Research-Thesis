@@ -65,7 +65,7 @@ There are several challenges posed in providing SLA guarantees in an edge deploy
 
 Several strategies have been proposed to counteract these challenges. Linlin \textit{et al}. \cite{wu2013sla} proposed a customer-driven strategy  to minimize the provisioning costs. The algorithm considers the customer profiles as well as cloud providers' quality parameters such as response time to dynamically handle customer requests. Rajkumar \textit{et al}. \cite{rajavel2012achieving} proposed a solution for alleviating the issue of delay in service allocation to users through the use of a novel hierarchical scheduling algorithm. This algorithm increases the performance of the scheduling algorithm, thus reducing the wastage of resources, and minimizing wait times. Sakr \textit{et al}. \cite{sakr2012sla} introduced a novel approach to combat application performance degradation by using a middleware between consumers and the cloud. This middleware helps to facilitate dynamic provisioning of cloud databases based on consumer requirements, tailoring their needs and requirements to mitigate peak usages being hit often.
 
-\section{Resource Management and Scheduling Solutions}
+\section{Resource Management and Scheduling Survey}
 \label{sec:ch3-resource-schedule-solutions}
 
 To counteract the limitations discussed in section \ref{subsec:ch3-edge-resource-alloc}, several custom scheduling and resource management algorithms have been proposed for edge architectures.\par
@@ -78,7 +78,7 @@ Wojciechowski \textit{et al}. \cite{wojciechowski2021netmarks} proposed a simila
 
 While these proposals improved the scheduling and resource provisioning of edge deployments, they did not address key limitations addressed above such as the need for dynamic resource scaling so as to face the challenges of real-time data processing and SLA compliance. Due to these issues, several auto-scaling algorithms were proposed to address them.
 
-\section{Reactive Autoscaling Solutions}
+\section{Reactive Autoscaling Survey}
 \label{sec:ch3-reactive-solutions}
 
 Nunes \textit{et al}. \cite{nunes2021state} stated that horizontal pod auto-scaling using a reactive strategy remains the most popular auto-scaling technique, as well as research topic. These strategies, despite having limitations such as a reliance on predetermined resource thresholds and a delay in resource scaling, have been popular in research articles.  Dogani \textit{et al}. \cite{dogani2023auto} stated that this was due to the simplicity and user-friendliness in developing them. Table \ref{tab:reactive-autoscalers} summarizes the reactive auto-scaling algorithms discussed below:\par
@@ -151,7 +151,7 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
 \end{table}
 %TC:endignore
 
-\section{Proactive Autoscaling Solutions}
+\section{Proactive Autoscaling Survey}
 \label{sec:ch3-proactive-solutions}
 
 Lorido \textit{et al}. \cite{lorido2014review} showed that compared to reactive algorithms, proactive algorithms achieved better resource allocation once they had been carefully optimized. Machine learning (ML) techniques such as auto-regressive integrated moving averages (ARIMA) and long short-term memory (LSTM) have gained populary in time-series analysis due to their relative ease of building and efficiency compared to other ML models. Through the careful use of these models, linear patterns in the data can be automatically identified in a short amount of time with relatively constrained resources. There are however several challenges when implementing a proactive algorithm. Time-series analysis models may struggle when dealing with highly complex and non-linear data \cite{dogani2023auto}. The development of a generalised algorithm for several edge architectures remains a costly process. One of the biggest challenges is the initial lack of training data. Another issue is the exploding or vanishing gradient problem \cite{pascanu2013difficulty}, though modern algorithms ensure that they avoid this pitfall \cite{hochreiter2001gradient}. Despite these challenges, their application in scaling of resources with semi-predictable data series remain valuable. Table \ref{tab:proactive-autoscalers} summarizes the proactive auto-scaling algorithms discussed below:\par
@@ -211,7 +211,7 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
 \end{table}
 %TC:endignore
 
-\section{Hybrid Autoscaling Solutions}
+\section{Hybrid Autoscaling Survey}
 \label{sec:ch3-hybrid-solutions}
 
 All the approaches mentioned in sections \ref{sec:ch3-reactive-solutions} and \ref{sec:ch3-proactive-solutions} have their benefits and drawbacks. Thus, hybrid solutions which merge multiple auto-scaling methods were proposed \cite{qu2018auto}. While hybrid algorithms for cloud-based deployments exist, integrating them into edge architectures pose several challenges due to the lower data storage and computational capacity of the edge layer. Furthermore, extracting the proactive time-series analysis to the cloud layer poses further challenges due to the inherent latency present between the two layers. Despite this, exploring these solutions provides a solid template for the approach used in this paper, table \ref{tab:hybrid-autoscalers} shows an overview of the proposals discussed below:\par

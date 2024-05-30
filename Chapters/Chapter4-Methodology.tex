@@ -256,7 +256,7 @@ The reactive autoscaler subsystem is responsible for determining whether or not 
     \centering
     \caption{Pre-processing of data, courtesy of Christopher Boucher \cite{comsolcurvefitting}}
     \label{fig:data-pre-process}
-    \includegraphics[width=0.6\linewidth]{Figures/Data-Pre-Processing.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Data-Pre-Processing.pdf}
 \end{figure}
 
 To speed up the forecast process even further and reduce the resource and time requirements, the time-series data can be pre-processed to smoothen it. Doing so makes it easier for the deep learning model to extract patterns, and reduces the training and validation loss. Figure \ref{fig:data-pre-process} shows a graph containing raw input (shown in black), and a smoothened data curve (shown in red). While the red curve contains all the requisite information of the data (such as the slope of the curve, maximum and minimum value, etc.), it removes the noise, reducing the overall loss, and reducing the length of the training window data sequence the LSTM requires to accurately predict future data.\par
@@ -341,7 +341,7 @@ Finally, the last hybrid autoscaler subsystem is the autoscaler controller's SLA
 
 Finally, if the feedback control loop discovers that no SLA-violations occurred during the time-period, it concludes that the LSTM has sufficiently learned the primary characteristics of the time-series. As discussed by Siami-Namini \textit{et al}. \cite{siami2018comparison}, the ``rolling-updates'' feature of LSTM allows the autoscaler to safely reset the hyper-parameters of the model, while preserving the learning and weights of the previous rounds of training. Algorithm \ref{alg:sla-heuristic-feedback} shows how the heuristic feedback is set up. The algorithm takes the three hyper-parameters of the LSTM, namely $learning\_rate$, $batch\_size$, and $epochs$, along with the $\mathcal{V}$ which stores the number of SLA violations that occurred during a specified time window. Using these parameters, the algorithm computes the new LSTM hyper-parameters and outputs them to the proactive forecaster to use in the next training cycle.\par
 
-\subsection{Space Time Complexity}
+\subsection{Computational Complexity Analysis}
 \label{subsec:ch4-space-time-comp}
 
 To analyze the space and time complexity of the auto-scaling architecture, some simplifying assumptions must be made. Firstly, the complexities will be for one control loop of the container orchestration platform. By default, controller orchestration platforms have control loops which are executed every 15 seconds. During each of these loops, auto-scaling is assessed and implemented. Thus we will ignore the complexities involved in the control loop itself, and focus only on the autoscaler.\par

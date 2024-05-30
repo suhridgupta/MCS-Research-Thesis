@@ -14,13 +14,13 @@ In this chapter, a brief introduction to Service Level Agreements is provided in
 
 \begin{figure}[htb]
     \centering
-    \caption{Types of service level agreements}
-    \includegraphics[width=0.9\linewidth]{Figures/SLA-Cloud-Computing.png}
+    \caption{Overview of service level agreements}
+    \includegraphics[width=0.9\linewidth]{Figures/SLA-Cloud-Computing.pdf}
     \label{fig:sla-types}
 \end{figure}
 
 Cloud computing generally exposes resource using a pay-as-you-go service. These lucrative plans have led to the implementation of applications and hardwares being delivered as Software as a Service (SaaS), Platform as a Service (PaaS), and Infrastructure as a Service (IaaS). However, consumers of such services have demands which may vary significantly, and it is impossible to fulfill all these expectations. Thus a balance needed to be struck in order to commit to an agreement \cite{patel2009service}. \par
-This commitment is known as a Service Level Agreement (SLA). This SLA defines the expected services provided by the provider, and agreed to by the consumer. The most common metric by which SLAs are negotiated between providers and consumers is the availability of service.
+This commitment is known as a Service Level Agreement (SLA). This SLA defines the expected services provided by the provider, and agreed to by the consumer. For example, one of the most common metric by which SLAs are negotiated between providers and consumers is the availability of service.
 
 \subsection{Availability of Services}
 \label{subsec:ch2-svc-availability}
@@ -52,12 +52,12 @@ Table \ref{table:sla-availability} shows the expected down-times for several SLA
 \section{Microservice Architecture}
 \label{sec:ch2-micro-svc-arc}
 
-Micro-service architectures involve decomposing an application into several loosely coupled services, and deploying them on separate servers known as ``nodes''. These services communicate with each other through a lightweight framework such as RESTful APIs \cite{li2021understanding}. Within these services, application data and commands are stored and executed within ``containers''. Typically, these architectures provide scalability, as well as ease of deployment and modification. Availability however, remains an important concern for such deployments. For a deployment to be classified as ``highly available'', it must be accessible at least 99.999\% of the time. For example, a highly available search engine would only face 5 minutes of down time per year \cite{nabi2016availability}. Therefore, an orchestration mechanism is required to manage the deployment and communication of these containers.\par
+Micro-service architectures involve decomposing an application into several loosely coupled services, and deploying them on separate cloudlet servers known as ``nodes''. These services communicate with each other through a lightweight framework such as RESTful APIs \cite{li2021understanding}. Within these services, application data and commands are stored and executed within ``containers''. Typically, these architectures provide scalability, as well as ease of deployment and modification. Availability however, remains an important concern for such deployments. For a deployment to be classified as ``highly available'', it must be accessible at least 99.999\% of the time. For example, a highly available search engine would only face 5 minutes of down time per year \cite{nabi2016availability}. Therefore, an orchestration mechanism is required to manage the deployment and communication of these containers.\par
 
 \begin{figure}[htb]
     \centering
     \caption{Features of container orchestration}
-    \includegraphics[width=0.9\linewidth]{Figures/Container-Orchestration.png}
+    \includegraphics[width=0.9\linewidth]{Figures/Container-Orchestration.pdf}
     \label{fig:container-orchestration}
 \end{figure}
 
@@ -76,18 +76,9 @@ The smallest unit of work in a Kubernetes deployment is known as a \textit{pod} 
 \begin{figure}[htb]
     \centering
     \caption{Overview of Kubernetes architecture}
-    \includegraphics[width=0.5\linewidth]{Figures/K8s-Architecture.png}
+    \includegraphics[width=0.5\linewidth]{Figures/K8s-Architecture.pdf}
     \label{fig:k8s-arch}
 \end{figure}
-
-\subsubsection{Data Plane}
-\label{subsubsec:ch2-k8s-data-plane}
-
-The \textit{container runtime} is a process which downloads or ``pulls'' the image for the required container onto the node. Kubernetes supports a wide range of runtimes, but some of the popular solutions are CRI-O \footnote{\url{https://cri-o.io/}}, containerd \footnote{\url{https://containerd.io/}}, and Docker \footnote{\url{https://www.docker.com/}}.\par
-
-The most important process running on every data plane node is the \textit{kubelet}. This process executes the image assigned to the node via the container runtime, perform health checks, and reports the node status to the control plane.\par
-
-Another data plane process is the \textit{kube-proxy}, which manages the rules for forwarding requests to services, as well as the IP tables of nodes. If a service is added or removed, kube-poxy updates the IP table accordingly.\par
 
 \subsubsection{Control Plane}
 \label{subsubsec:ch2-k8s-control-plane}
@@ -99,21 +90,30 @@ The \textit{etcd} is a data store which persists the deployment state in a key-v
 
 Finally, the \textit{scheduler} decides the location where the pod will be deployed. The scheduler runs a control loop which searches for unscheduled pods using the API server. It then assigns the pods to a dataplane node based on several predicates and priorities such as resource requirements and node affinity respectively.
 
-\section{Autoscaling Overview}
+\subsubsection{Data Plane}
+\label{subsubsec:ch2-k8s-data-plane}
+
+The \textit{container runtime} is a process which downloads or ``pulls'' the image for the required container onto the node. Kubernetes supports a wide range of runtimes, but some of the popular solutions are CRI-O \footnote{\url{https://cri-o.io/}}, containerd \footnote{\url{https://containerd.io/}}, and Docker \footnote{\url{https://www.docker.com/}}.\par
+
+The most important process running on every data plane node is the \textit{kubelet}. This process executes the image assigned to the node via the container runtime, perform health checks, and reports the node status to the control plane.\par
+
+Another data plane process is the \textit{kube-proxy}, which manages the rules for forwarding requests to services, as well as the IP tables of nodes. If a service is added or removed, kube-poxy updates the IP table accordingly.\par
+
+\section{Auto-scaling Overview}
 \label{sec:ch2-auto-scaling}
 
-Apart from intelligently scheduling pods to data plane nodes \cite{kayal2020kubernetes}, Kubernetes has the provisions to dynamically respond to changes in resource requirements. This process of scaling nodes, pods, or other resources depending on requirements in an automated manner is known as \textit{auto-scaling}. Kubernetes supports three variations of auto-scaling.\par
+Apart from intelligently scheduling pods to data plane nodes, Kubernetes has the provisions to dynamically respond to changes in resource requirements \cite{kayal2020kubernetes}. This process of scaling nodes, pods, or other resources depending on requirements in an automated manner is known as \textit{auto-scaling}. Kubernetes supports three variations of auto-scaling.\par
 
 \textit{Cluster auto-scaling} modifies the number of nodes running in the entire deployment, or cluster. Dynamically allocating nodes based on resource requirements helps to manage the cost of running Kubernetes deployments on external platforms such as Amazon \footnote{\url{https://docs.aws.amazon.com/eks/}} or Google \footnote{\url{https://cloud.google.com/kubernetes-engine/}}. The autoscaler works by looping through two tasks. The first watches for unscheduled pods, the second checks if the current deployed pods (pods which are running on the data plane) can be merged on a smaller number of nodes.\par
 
 \textit{Vertical pod auto-scaling} modifies the CPU and memory resources assigned to pods. By default, the scheduler reserves a larger amount of these resources to pods than is usually required. By performing vertical pod auto-scaling, the cluster can better manage its over-provisioned resources in real-time.\par
 
-\textit{Horizontal pod auto-scaling} is the most commonly used auto-scaling strategy \cite{baresi2021kosmos}, it modifies the number of pods assigned to a task, based on the resources being requested. Kubernetes implements this using a periodic control loop which runs every 15 seconds by default. The control manager compares the actual resource utilization with the target utilization defined by the deployment script, and scales the number of pods accordingly.
+\textit{Horizontal pod auto-scaling} is the most commonly used auto-scaling strategy \cite{baresi2021kosmos}. It modifies the number of pods assigned to a task, based on the resources being requested. Kubernetes implements this using a periodic control loop which runs every 15 seconds by default. The control manager compares the actual resource utilization with the target utilization defined by the deployment script, and scales the number of pods accordingly.
 
-\subsection{Custom Autoscaling}
+\subsection{Custom Auto-scaling}
 \label{subsec:ch2-custom-auto-scaling}
 
-The default horizontal pod autoscaler uses pod CPU and memory utilization when making its scaling decisions. However, these metrics may be too rigid when it comes to edge architectures \cite{coulson2020adaptive}. The strict SLA constraints in place, along with the lower amount of resources present in the edge layer as compared to the cloud layer, make it imperative for custom metrics to be employed to autoscale resources as efficiently as possible.\par
+The default horizontal pod autoscaler uses pod CPU and memory utilization when making its scaling decisions. However, these metrics may be too rigid when it comes to scaling edge architecture resources \cite{coulson2020adaptive}. The strict SLA constraints in place, along with the lower amount of resources present in the edge layer as compared to the cloud layer, make it imperative for custom metrics to be employed to autoscale resources as efficiently as possible.\par
 
 Figure \ref{fig:custom-autoscale-overview} depicts the general architecture of the custom autoscaler. Typically, the autoscaler queries metrics from the default metrics registry, which acts as a central store for all metrics that are exposed to the developer. Three interfaces to this registry are exposed:
 \begin{itemize}
@@ -126,14 +126,14 @@ For custom metric auto-scaling, the autoscaler must be configured in a way where
 \begin{figure}[htb]
     \centering
     \caption{Custom autoscaler architecture overview.}
-    \includegraphics[width=.7\linewidth]{Figures/Custom-Metrics-Autoscaling.png}
+    \includegraphics[width=.7\linewidth]{Figures/Custom-Metrics-Autoscaling.pdf}
     \label{fig:custom-autoscale-overview}
 \end{figure}
 
 \section{Time-Series Analysis}
 \label{sec:ch2-time-series}
 
-Several self-learning machine learning solutions exist. One of the most popular traditional models is the Convolutional Neural Network (CNN), which is a form of deep learning that attempts to learn data features through the process of filters optimization. However, while CNNs are excellent when working with 3-dimensional data such as images, it does not perform well when dealing with sequential inputs with interdependent data. Due to this, another machine learning subset known as Recurrent Neural Network (RNN) was conceptualized. \par
+Several machine learning algorithms exist, however not all of them are suitable for time-series analysis \cite{mahmoud2021survey}. One of the most popular traditional models is the Convolutional Neural Network (CNN), which is a form of deep learning that attempts to learn data features through the process of filters being applied to the input at each convolutional layer, and the output being passed to the next layer. However, while CNNs are excellent when working with 3-dimensional data such as images, it does not perform well when dealing with sequential inputs with interdependent data \cite{zhao2017convolutional}. Due to this, another machine learning subset known as Recurrent Neural Network (RNN) was conceptualized. \par
 
 \subsection{Architecture Overview}
 \label{subsec:ch2-time-series-overview}
@@ -142,8 +142,8 @@ Recurrent Neural Networks store information about the past, and its future decis
 
 \begin{figure}[htb]
     \centering
-    \caption{Recurrent Neural Network Architecture}
-    \includegraphics[width=1.0\linewidth]{Figures/RNN-Overview.png}
+    \caption{Recurrent Neural Network architecture}
+    \includegraphics[width=1.0\linewidth]{Figures/RNN-Overview.pdf}
     \label{fig:rnn-architecture}
 \end{figure}
 
@@ -169,12 +169,12 @@ Where $W_{y}$ is the output weight.\par
 
 RNN also employs a back-propagation algorithm during training. However, the parameters are used by all the network states $h_{i}; i \in \{1, 2, ... , n\}$. However, RNN training encounters two big issues, namely the vanishing and exploding gradients. These issues hinder the accuracy of predictions. If the training sequence is too long, the RNN has a difficult time carrying previous information from one training iteration to the next. To address this issue, an improved version of RNNs was created, known as LSTM.\par
 
-Long Short-Term Memory or LSTM is a deep learning model which is enhanced from the traditional RNN architecture. In an RNN function, the hidden state activation is influenced by nearby activation functions. This is known as the ``short-term'' memory. Meanwhile the overall network weights are influenced by the computations which occur over the entire long data sequence.\par
+Long Short-Term Memory or LSTM is a deep learning model which is enhanced from the traditional RNN architecture \cite{lindemann2021survey}. In an RNN function, the hidden state activation is influenced by nearby activation functions. This is known as the ``short-term'' memory. Meanwhile the overall network weights are influenced by the computations which occur over the entire long data sequence.\par
 
 \begin{figure}[htb]
     \centering
-    \caption{LSTM Cell Architecture}
-    \includegraphics[width=0.8\linewidth]{Figures/LSTM-Cell-Architecture.png}
+    \caption{LSTM cell architecture}
+    \includegraphics[width=0.8\linewidth]{Figures/LSTM-Cell-Architecture.pdf}
     \label{fig:lstm-cell-architecture}
 \end{figure}
 
@@ -226,6 +226,6 @@ Finally, the output gate determines which portion of the current cell state is i
 
 There are two major methods of using a time-series model to determine the predicted outcomes, namely a one-step forecast model, and a multi-step forecast model.\par
 
-In a \textit{One Step Forecast}, the time-series model first extracts short-term characteristics and correlations amongst the variables. It then feeds these into the various layers of its architecture during the training process, and finally generates a point forecast. In theory, such an approach would be more efficient, however it is heavily dependant on the correct training specifications and hyper-parameter selections, and thus is difficult to configure.\par
+In a \textit{One Step Forecast}, the time-series model first extracts short-term characteristics and correlations amongst the variables. It then feeds these into the various layers of its architecture during the training process, and finally generates a point forecast. In theory, such an approach would be more efficient, however it is heavily dependant on the correct training specifications and hyper-parameter selections, and thus is difficult to configure \cite{marcellino2006comparison}.\par
 
-In a \textit{Multi Step Forecast}, the time-series model does the same training steps as the above approach, but then it predicts several data points of output in one single shot. Such an approach may take less time to make a prediction, and has less chances of inaccurate predictions due to it being more robust to model mis-specifications.
+In a \textit{Multi Step Forecast}, the time-series model does the same training steps as the above approach, but then it predicts several data points of output in one single shot. Such an approach may take less time to make a prediction, and has less chances of inaccurate predictions due to it being more robust to model misspecifications.

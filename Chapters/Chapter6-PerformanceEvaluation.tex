@@ -70,7 +70,7 @@ $ helm install social-media \
 With the social media network now deployed, a workload for both GET and POST commands was invoked to generate the latency trace on Jaeger, as depicted in listing \ref{lst:wrk2-api-calls}.
 
 \begin{lstlisting}[
-  caption={Social network installation using Helm},
+  caption={Generate Jaeger trace},
   captionpos=t,
   label={lst:wrk2-api-calls},
   float=ht,
@@ -89,17 +89,17 @@ With the traces generated, the deployments that require autoscaling could be ide
 
 \begin{figure}[htb]
     \centering
-    \caption{Home Timeline and Compose Post API trace}
+    \caption{API trace for \textit{home-timeline-service} and \textit{compose-post-service}}
     \label{fig:ht-cp-trace}
     \begin{minipage}{0.25\linewidth}
         %\caption{Home Timeline API trace}
         %\label{fig:home-timeline-trace}
-        \includegraphics[width=1.0\linewidth]{Figures/Home-Timeline-GET-Trace.png}
+        \includegraphics[width=1.0\linewidth]{Figures/Home-Timeline-GET-Trace.pdf}
     \end{minipage}\hfill
     \begin{minipage}{0.75\linewidth}
         %\caption{Compose Post API trace}
         %\label{fig:compose-post-trace}
-        \includegraphics[width=1.0\linewidth]{Figures/Compose-Post-POST-Trace.png}
+        \includegraphics[width=1.0\linewidth]{Figures/Compose-Post-POST-Trace.pdf}
     \end{minipage}
 \end{figure}
 
@@ -164,15 +164,15 @@ In the first experiment, the IoT workload generation algorithm was configured to
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - Total CPU utilization for home-timeline-service}
+    \caption{Total CPU utilization for home-timeline-service}
     \label{fig:exp1-workload}
-    \includegraphics[width=0.6\linewidth]{Figures/GET-Total-CPU.png}
+    \includegraphics[width=0.6\linewidth]{Figures/GET-Total-CPU.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - Total CPU utilization for home-timeline-service}
+    \captionof{figure}{Total CPU utilization for \textit{home-timeline-service}}
     \label{fig:exp1-workload}
     \begin{tikzpicture}
         \begin{axis}[
@@ -209,15 +209,15 @@ For the second experiment, the focus was on a more difficult auto-scaling task. 
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - Total CPU utilization}
+    \caption{Total CPU utilization For \textit{compose-post-service}}
     \label{fig:exp2-workload}
-    \includegraphics[width=0.6\linewidth]{Figures/POST-Total-CPU.png}
+    \includegraphics[width=0.6\linewidth]{Figures/POST-Total-CPU.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - Total CPU utilization for compose-post-service}
+    \captionof{figure}{Total CPU utilization for \textit{compose-post-service}}
     \label{fig:exp2-workload}
     \begin{tikzpicture}
         \begin{axis}[
@@ -271,15 +271,15 @@ To measure the effectiveness of the hybrid autoscaler, three baseline algorithms
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - Kubernetes Default Autoscaler Latency}
+    \caption{Kubernetes Default Autoscaler Latency For \textit{home-timeline-service}}
     \label{fig:exp1-default-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Default-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Default-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - Kubernetes Default Autoscaler Latency}
+    \captionof{figure}{Kubernetes default sutoscaler latency for \textit{home-timeline-service}}
     \label{fig:exp1-default-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -315,15 +315,15 @@ For both the workloads discussed above, a near 100\% CPU utilization on a solita
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - Kubernetes Default Autoscaler Latency}
+    \caption{Kubernetes Default Autoscaler Latency For \textit{compose-post-service}}
     \label{fig:exp2-default-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Default-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Default-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - Kubernetes Default Autoscaler Latency}
+    \captionof{figure}{Kubernetes default autoscaler latency for \textit{compose-post-service}}
     \label{fig:exp2-default-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -366,15 +366,15 @@ Based on these experimental results which showed that connections were being dro
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - THPA Reactive Autoscaler Latency}
+    \caption{THPA Reactive Autoscaler Latency For \textit{home-timeline-service}}
     \label{fig:exp1-reactive-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Reactive-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Reactive-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - THPA Reactive Autoscaler Latency}
+    \captionof{figure}{THPA reactive autoscaler latency for \textit{home-timeline-service}}
     \label{fig:exp1-reactive-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -412,15 +412,15 @@ While the algorithm still suffered from the cold start problem, the more intelli
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - THPA Reactive Autoscaler Latency}
+    \caption{THPA Reactive Autoscaler Latency For \textit{compose-post-service}}
     \label{fig:exp2-reactive-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Reactive-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Reactive-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - THPA Reactive Autoscaler Latency}
+    \captionof{figure}{THPA reactive autoscaler latency for \textit{compose-post-service}}
     \label{fig:exp2-reactive-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -465,15 +465,15 @@ Unlike the previous two baseline algorithms, the Proactive Pod Autoscaler algori
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - PPA Proactive Autoscaler Latency}
+    \caption{PPA Proactive Autoscaler Latency For \textit{home-timeline-service}}
     \label{fig:exp1-proactive-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Proactive-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Proactive-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - PPA Proactive Autoscaler Latency}
+    \captionof{figure}{PPA proactive autoscaler latency for \textit{home-timeline-service}}
     \label{fig:exp1-proactive-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -511,15 +511,15 @@ While the SLA violations were not as severe as the ones seen in the Default auto
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - PPA Proactive Autoscaler Latency}
+    \caption{PPA Proactive Autoscaler Latency For \textit{compose-post-service}}
     \label{fig:exp2-proactive-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Proactive-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Proactive-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - PPA Proactive Autoscaler Latency}
+    \captionof{figure}{PPA proactive autoscaler latency for \textit{compose-post-service}}
     \label{fig:exp2-proactive-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -562,15 +562,15 @@ From these investigations, it can be seen that the proactive auto-scaling approa
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - Hybrid Autoscaler Latency}
+    \caption{Hybrid Autoscaler Latency For \textit{home-timeline-service}}
     \label{fig:exp1-hybrid-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Hybrid-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-Hybrid-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - Hybrid Autoscaler Latency}
+    \captionof{figure}{Hybrid autoscaler latency for \textit{home-timeline-service}}
     \label{fig:exp1-hybrid-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -608,15 +608,15 @@ From the graph, it is clear that for the GET request experiment, no SLA violatio
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - Hybrid Autoscaler Latency}
+    \caption{Hybrid Autoscaler Latency For \textit{compose-post-service}}
     \label{fig:exp2-hybrid-k8s}
-    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Hybrid-Latency.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-Hybrid-Latency.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - Hybrid Autoscaler Latency}
+    \captionof{figure}{Hybrid autoscaler latency for \textit{compose-post-service}}
     \label{fig:exp2-hybrid-k8s}
     \begin{tikzpicture}
         \begin{axis}[
@@ -662,15 +662,15 @@ The distribution of CPU $workload$ across the deployment pods was another import
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - Autoscaler CPU Workload Distribution Comparison}
+    \caption{Autoscaler CPU Workload Distribution Comparison For \textit{home-timeline-service}}
     \label{fig:exp1-cpu-avg-dist}
-    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-CPU-Usage.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-CPU-Usage.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - Autoscaler CPU Workload Distribution Comparison}
+    \captionof{figure}{Autoscaler CPU workload distribution for \textit{home-timeline-service}}
     \label{fig:exp1-cpu-avg-dist}
     \begin{tikzpicture}
         \begin{axis}[
@@ -710,15 +710,15 @@ In the second experiment with the heavier POST API, the auto-scaling threshold o
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - Autoscaler CPU Workload Distribution Comparison}
+    \caption{Autoscaler CPU Workload Distribution Comparison For \textit{compose-post-service}}
     \label{fig:exp2-cpu-avg-dist}
-    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-CPU-Usage.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-CPU-Usage.pdf}
 \end{figure}
 \end{comment}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - Autoscaler CPU Workload Distribution Comparison}
+    \captionof{figure}{Autoscaler CPU workload distribution for \textit{compose-post-service}}
     \label{fig:exp2-cpu-avg-dist}
     \begin{tikzpicture}
         \begin{axis}[
@@ -771,14 +771,14 @@ To achieve this, all four algorithms were tested again on the moderate and stric
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment I - SLA Violation Percentages}
+    \caption{SLA Violation Percentages For \textit{home-timeline-service}}
     \label{fig:exp1-sla-violation-bar}
-    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-SLA-Violations.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Home-Timeline-SLA-Violations.pdf}
 \end{figure}
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - SLA Violation Percentages}
+    \captionof{figure}{SLA Violation Percentages For \textit{home-timeline-service}}
     \label{fig:exp1-sla-violation-bar}
     \begin{tikzpicture}
         \begin{axis}[
@@ -813,7 +813,7 @@ To achieve this, all four algorithms were tested again on the moderate and stric
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment I - SLA Violation Percentages}
+    \captionof{figure}{SLA violation percentages for \textit{home-timeline-service}}
     \label{fig:exp1-sla-violation-bar}
     \begin{tikzpicture}
         \begin{axis}[
@@ -856,7 +856,7 @@ Finally, the strict SLA threshold of 100 milliseconds was tested, which proved e
 
 %TC:ignore
 \begin{table}
-    \caption{Experiment I - SLA Violation Counts}\label{tab:exp1-sla-violation-count}
+    \caption{SLA violation counts for \textit{home-timeline-service}}\label{tab:exp1-sla-violation-count}
     \centering
     \begin{tabular}{|l|l|l|l|}
         \hline
@@ -876,15 +876,15 @@ Finally, the strict SLA threshold of 100 milliseconds was tested, which proved e
 \begin{comment}
 \begin{figure}[htb]
     \centering
-    \caption{Experiment II - SLA Violation Percentages}
+    \caption{SLA Violation Percentages For \textit{compose-post-service}}
     \label{fig:exp2-sla-violation-bar}
-    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-SLA-Violations.png}
+    \includegraphics[width=0.6\linewidth]{Figures/Compose-Post-SLA-Violations.pdf}
 \end{figure}
 
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - SLA Violation Percentages}
+    \captionof{figure}{SLA Violation Percentages For \textit{compose-post-service}}
     \label{fig:exp2-sla-violation-bar}
     \begin{tikzpicture}
         \begin{axis}[
@@ -919,7 +919,7 @@ Finally, the strict SLA threshold of 100 milliseconds was tested, which proved e
 
 \begin{center}
 \begin{minipage}{\linewidth}
-    \captionof{figure}{Experiment II - SLA Violation Percentages}
+    \captionof{figure}{SLA violation percentages for \textit{compose-post-service}}
     \label{fig:exp2-sla-violation-bar}
     \begin{tikzpicture}
         \begin{axis}[
@@ -966,7 +966,7 @@ This meant that over the two experiments and three SLA thresholds, the hybrid ap
 
 %TC:ignore
 \begin{table}
-    \caption{Experiment II - SLA Violation Counts}\label{tab:exp2-sla-violation-count}
+    \caption{SLA violation counts for \textit{compose-post-service}}\label{tab:exp2-sla-violation-count}
     \centering
     \begin{tabular}{|l|l|l|l|}
         \hline
