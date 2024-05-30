@@ -7,16 +7,16 @@
 \chapter{\chaptertitle}
 \label{ch:experimental-setup}
 
-Based on the previous high-level overview of the architectures and algorithms involved, in this chapter we will first discuss the micro-service application architecture used to test the auto-scaling on, along with its features in section \ref{sec:ch4-microservice-overview}. With this background, section \ref{sec:ch4-data-generation} will give an explanation of the workload generator bundled along with the micro-service deployment, and how that was used to generate the time-series workload typically seen in edge deployments. Finally, we will discuss the technical configurations of the hybrid autoscaler itself in section \ref{sec:ch4-hybrid-auto-arch}. This will involve how the workload information is communicated between cloud and edge layers, how the autoscaler parameters for both reactive and proactive subsystems are configured, and how the forecaster is configured to use the time-series data to generate forecast values for a sufficiently large time-period to minimize training times even further. Finally, the hyper-parameter tuning configured by the autoscaler controller will be further elaborated.
+Based on the previous high-level overview of the architectures and algorithms involved, in this chapter we will first discuss the micro-service application architecture used to test the auto-scaling on, along with its features in section \ref{sec:ch5-microservice-overview}. With this background, section \ref{sec:ch5-data-generation} will give an explanation of the workload generator bundled along with the micro-service deployment, and how that was used to generate the time-series workload typically seen in edge deployments. Finally, we will discuss the technical configurations of the hybrid autoscaler itself in section \ref{sec:ch5-hybrid-auto-arch}. This will involve how the workload information is communicated between cloud and edge layers, how the autoscaler parameters for both reactive and proactive subsystems are configured, and how the forecaster is configured to use the time-series data to generate forecast values for a sufficiently large time-period to minimize training times even further. Finally, the hyper-parameter tuning configured by the autoscaler controller will be further elaborated.
 
 \section{Micro-service Overview}
-\label{sec:ch4-microservice-overview}
+\label{sec:ch5-microservice-overview}
 
-The container orchestration used for deploying the micro-service deployment, custom hybrid autoscaler, as well as all the additional telemtry tools was Kubernetes. Kubernetes offered the highest configurability for such a project, and combined with its ease-of-use, made it ideal for stress testing auto-scaling. DeathStarBench \footnote{\url{https://github.com/delimitrou/DeathStarBench/tree/master/socialNetwork}}, a social network micro-service implementation developed by Y. Gan et al. \cite{gan2019open} was purpose-built for conducting benchmarks on edge architectures with constraints such as SLA agreements, and was thus deployed on the Kubernetes platform. The application mimics a typical large-scale social network application and supports common actions such as registering and login for user credentials, creating user posts on their timeline, reading other user timelines, receiving follower recommendations, following and unfollowing of other users, and searching for users or posts. Figure \ref{fig:social-network-arch} shows the detailed architecture of the micro-service.\par
+The container orchestration used for deploying the micro-service deployment, custom hybrid autoscaler, as well as all the additional telemtry tools was Kubernetes. Kubernetes offered the highest configurability for such a project, and combined with its ease-of-use, made it ideal for stress testing auto-scaling. DeathStarBench \footnote{\url{https://github.com/delimitrou/DeathStarBench/tree/master/socialNetwork}}, a social network micro-service implementation developed by Y. Gan \textit{et al}. \cite{gan2019open} was purpose-built for conducting benchmarks on edge architectures with constraints such as SLA agreements, and was thus deployed on the Kubernetes platform. The application mimics a typical large-scale social network application and supports common actions such as registering and login for user credentials, creating user posts on their timeline, reading other user timelines, receiving follower recommendations, following and unfollowing of other users, and searching for users or posts. Figure \ref{fig:social-network-arch} shows the detailed architecture of the micro-service.\par
 
 \begin{figure}[htb]
     \centering
-    \caption{Social-Network Architecture, courtesy of Y. Gan et al. \cite{gan2019open}}
+    \caption{Social-Network Architecture, courtesy of Y. Gan \textit{et al}. \cite{gan2019open}}
     \label{fig:social-network-arch}
     \includegraphics[width=1.0\linewidth]{Figures/Social-Network-Architecture.pdf}
 \end{figure}
@@ -34,7 +34,7 @@ http://<app-IP>:<app-port>/wrk2-api/user-timeline/read
 \end{lstlisting}
 
 \section{Data Generation}
-\label{sec:ch4-data-generation}
+\label{sec:ch5-data-generation}
 
 The social media deployment also comes with an HTTP workload generator, which
 was leveraged to create a realistic simulation of a typical day of workload for the micro-service application. The generator, known as ``wrk2'', is an open-loop load generator. HTTP requests are sent out according to the user configuration, regardless of whether or not the responses of the previous requests have been received. This avoids issues such as queuing delays in the server, helping to maintain an even load throughout the generation process which aids in benchmark process. The workload generator supports a variety of load generation use-cases, as well as different APIs. For example, a POST request with a total load generation of 8 requests per second, using 2 parallel threads, with 5 open HTTP connections, and for a duration of 30 seconds looks as follows:\par
@@ -80,7 +80,7 @@ To achieve this, an IoT workload algorithm was created for leveraging the wrk2 g
 \end{algorithm}
 
 \section{Hybrid Autoscaler Configuration}
-\label{sec:ch4-hybrid-auto-arch}
+\label{sec:ch5-hybrid-auto-arch}
 
 %In this section, the configuration parameters of the proposed hybrid autoscaler will be discussed. First, a brief background will be provided of how the social network application is connected to Kubernetes, so that it can send default and custom metrics such as application CPU usage and latency respectively. These custom metrics will then be discussed further, and how they are integrated for use in the horizontal pod autoscaler.\par
 
@@ -257,7 +257,7 @@ Now, the Kubernetes custom metrics API exposes the following additional APIs und
 
 With the custom metrics now being exposed by Kubernetes, all the tools required for the reactive auto-scaling subsystem are in place. This will be built as an extension of the default Kubernetes horizontal pod autoscaler.\par
 
-As discussed in subsection \ref{subsec:ch3-hybrid-arch}, the reactive autoscaler cool-down parameters must be set to a value that is not too small or large. For this experiment, the parameters of the autoscaler were modified by setting both the scale up and scale down cooldown values to 15 seconds, or one control loop, and maintain the toleration value at the default of 0.1. This ensures that reactive auto-scaling occurs as quickly as possible, to minimize SLA violations, while decreasing the chances of resources constantly being scaled up and down in a yo-yo manner \cite{sides2015yo}, which leads to unavailability of resources and drives up resource costs. Listing \ref{lst:reactive-cooldown-config} shows the configuration snippet of the reactive autoscaler provisioning tool to achieve this.\par
+As discussed in subsection \ref{subsec:ch4-hybrid-arch}, the reactive autoscaler cool-down parameters must be set to a value that is not too small or large. For this experiment, the parameters of the autoscaler were modified by setting both the scale up and scale down cooldown values to 15 seconds, or one control loop, and maintain the toleration value at the default of 0.1. This ensures that reactive auto-scaling occurs as quickly as possible, to minimize SLA violations, while decreasing the chances of resources constantly being scaled up and down in a yo-yo manner \cite{sides2015yo}, which leads to unavailability of resources and drives up resource costs. Listing \ref{lst:reactive-cooldown-config} shows the configuration snippet of the reactive autoscaler provisioning tool to achieve this.\par
 
 %TC:ignore
 \begin{lstlisting}[
@@ -284,7 +284,7 @@ spec:
 While these parameters are configurable by other users, experimental results showed that for SLA-compliant applications, these parameters were capable of producing the best results for a wide array of use-cases. Higher cooldown windows lead to SLA-violations due to the time taken to scale resources, while smaller windows caused the constant scaling up and down of resources on small variations, leading to a loss of resource availability and increased deployment costs for the entire architecture.
 
 \subsection{Proactive Autoscaler}
-\label{subsec:ch4-proactive-auto-subsection}
+\label{subsec:ch5-proactive-auto-subsection}
 
 The proactive autoscaler resource provisioning subsystem has a Kubernetes configuration that is similar to the reactive one shown in listing \ref{lst:reactive-cooldown-config}. The same cooldown values of 15 seconds are applied here as well, to keep it consistent with the reactive solution.\par
 
@@ -353,7 +353,7 @@ The step-by-step forecast procedure was done as follows. The data which was gene
             xticklabels={Day 1, Day 2, Day 3, Day 4},
             xtick={600, 1080, 1530, 2000}
         ]
-            \addplot+[blue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Initial-Data.csv};
+            \addplot+[RoyalBlue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Initial-Data.csv};
             \legend{Historical}
         \end{axis}
     \end{tikzpicture}
@@ -386,7 +386,7 @@ To get around this issue, the proactive autoscaler introduced a data pre-process
             xticklabels={Day 1, Day 2, Day 3, Day 4},
             xtick={600, 1080, 1530, 2000}
         ]
-            \addplot+[blue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Smooth-Data.csv};
+            \addplot+[RoyalBlue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Smooth-Data.csv};
             \legend{Pre-Processed Historical}
         \end{axis}
     \end{tikzpicture}
@@ -412,7 +412,7 @@ The filtered data was then normalized to further remove the impact of scale betw
 \end{table}
 %TC:endignore
 
- It was experimentally discovered that a learning rate higher than the configured value reduced the prediction accuracy drastically, as the model was unable to find the optimal loss value during training, becoming stuck in a local minima. Furthermore, attempting to alleviate this issue by increasing training epochs to over 200 resulted in severe over-fitting, devaluing the algorithm for generalized workloads. Thus the hyper-parameters were chosen in such a way that they minimized training time and over-fitting, while maximizing prediction accuracy within the constraints of limited edge layer resources. To further reduce over-fitting, an additional function known as ``early-stop'' was defined which halted the training of the model if the loss did not decrease for 10 consecutive training epoch iterations. Lastly, an Adaptive Moment Estimation (Adam) optimizer \cite{diederik2014adam} was used in an attempt to generate the highest accuracy in the least amount of time. These parameters were determined based on the research experiments conducted by Siami-Namini et al. \cite{siami2018comparison}.\par
+ It was experimentally discovered that a learning rate higher than the configured value reduced the prediction accuracy drastically, as the model was unable to find the optimal loss value during training, becoming stuck in a local minima. Furthermore, attempting to alleviate this issue by increasing training epochs to over 200 resulted in severe over-fitting, devaluing the algorithm for generalized workloads. Thus the hyper-parameters were chosen in such a way that they minimized training time and over-fitting, while maximizing prediction accuracy within the constraints of limited edge layer resources. To further reduce over-fitting, an additional function known as ``early-stop'' was defined which halted the training of the model if the loss did not decrease for 10 consecutive training epoch iterations. Lastly, an Adaptive Moment Estimation (Adam) optimizer \cite{diederik2014adam} was used in an attempt to generate the highest accuracy in the least amount of time. These parameters were determined based on the research experiments conducted by Siami-Namini \textit{et al}. \cite{siami2018comparison}.\par
 
 \begin{center}
     \captionof{figure}{Loss and root mean squared error per training epoch}
@@ -427,7 +427,7 @@ The filtered data was then normalized to further remove the impact of scale betw
             xlabel={Iteration},
             ylabel={Loss}
         ]
-            \addplot table [x=Step, y=Value, mark=none, col sep=comma] {Data/epoch_loss.csv};
+            \addplot+ [color=RoyalBlue, mark=none] table [x=Step, y=Value, col sep=comma] {Data/epoch_loss.csv};
         \end{axis}
     \end{tikzpicture}
     \qquad
@@ -441,7 +441,7 @@ The filtered data was then normalized to further remove the impact of scale betw
             xlabel={Iteration},
             ylabel={Root Mean Squared Error}
         ]
-            \addplot table [x=Step, y=Value, mark=none, col sep=comma] {Data/epoch_root_mean_squared_error.csv};
+            \addplot+ [color=RoyalBlue, mark=none] table [x=Step, y=Value, col sep=comma] {Data/epoch_root_mean_squared_error.csv};
         \end{axis}
     \end{tikzpicture}
 \end{center}
@@ -495,7 +495,7 @@ The model training, validation and error comparison with previous model performa
             xticklabels={Day 1, Day 2, Day 3, Day 4, Day 5},
             xtick={462, 924, 1386, 1848, 2310}
         ]
-            \addplot+[blue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Final-Data-Value.csv};
+            \addplot+[RoyalBlue, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Final-Data-Value.csv};
             \addplot+[RedOrange, mark=none] table [x=xtick, y=value, col sep=comma] {Data/LSTM-Final-Data-Forecast.csv};
             %\draw[red, thick, dashed] (axis cs:0, 150) -- (axis cs:2472, 150);
             \legend{Historical, Forecast}
@@ -507,7 +507,7 @@ The model training, validation and error comparison with previous model performa
 \end{center}
 
 \subsection{Autoscaler Controller}
-\label{subsec:ch4-auto-daemon-subsection}
+\label{subsec:ch5-auto-daemon-subsection}
 
 The autoscaler controller stored a maximum of seven days of data for use by the proactive forecaster. Data that is too old is not very useful for a time-series model training on semi-predictable data \cite{greff2016lstm}, and only increases training time without adding much to the accuracy. This data was refreshed once every day to ensure that the latest data was always available to the hybrid autoscalers before training. Since training only took place once a day, the costly metric scraping operations done by the controller from the cloud layer could be reduced, thereby reducing the overall load on the network.\par
 
