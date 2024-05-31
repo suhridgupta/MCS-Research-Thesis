@@ -37,7 +37,7 @@ http://<app-IP>:<app-port>/wrk2-api/user-timeline/read
 \label{sec:ch5-data-generation}
 
 The social media deployment also comes with an HTTP workload generator, which
-was leveraged to create a realistic simulation of a typical day of workload for the micro-service application. The generator, known as ``wrk2'', is an open-loop load generator. HTTP requests are sent out according to the user configuration, regardless of whether or not the responses of the previous requests have been received. This avoids issues such as queuing delays in the server, helping to maintain an even load throughout the generation process which aids in benchmark process. The workload generator supports a variety of load generation use-cases, as well as different APIs. For example, a POST request with a total load generation of 8 requests per second, using 2 parallel threads, with 5 open HTTP connections, and for a duration of 30 seconds looks as follows:\par
+was leveraged to create a realistic simulation of a typical day of workload for the micro-service application. The generator, known as \textit{wrk2}, is an open-loop load generator. HTTP requests are sent out according to the user configuration, regardless of whether or not the responses of the previous requests have been received. This avoids issues such as queuing delays in the server, helping to maintain an even load throughout the generation process which aids in benchmark process. The workload generator supports a variety of load generation use-cases, as well as different APIs. For example, a POST request with a total load generation of 8 requests per second, using 2 parallel threads, with 5 open HTTP connections, and for a duration of 30 seconds looks as follows:\par
 
 \begin{lstlisting}[
   caption={Workload generation example},
@@ -59,23 +59,21 @@ A typical IoT application in the edge has a semi-predictable workload pattern. W
 
 In this experiment, it is assumed that the workload peaks in the morning and evening, while seeing moderate usage during the afternoon. The workload is lowest at night, maintaining a low usage throughout. The workload simulator was modified to introduce an element of randomness to mimic realistic weekly workloads, which can vary on occasions such as weekends and public holidays.\par
 
-To achieve this, an IoT workload algorithm was created for leveraging the wrk2 generator to achieve this time-series. This is explained in algorithm \ref{alg:work-gen}. A constant light workload is set for night time consisting of six hours between 12:00am and 06:00 am, while different workloads for the eighteen different day time hours are set, with peaks set in the morning and evening, and dips in the afternoon. The algorithm also contains a small random ``offset'' variable to depict the randomness inherent in the workload. This is depicted using the function $\mathcal{F}$, where $\mathcal{F}(0,1)$ returns a random number between 0 and 1. This workload is then executed using the wrk2 generator to apply the HTTP load on the micro-service.
+To achieve this, an IoT workload algorithm was created for leveraging the \textit{wrk2} generator to achieve this time-series. This is explained in algorithm \ref{alg:work-gen}. A constant light workload is set for night time consisting of six hours between 12:00am and 06:00 am, while different workloads for the rest of the 18 hours of the day are manually set, with peaks set in the morning and evening, and dips in the afternoon. The algorithm also contains a small random ``offset'' variable to depict the randomness inherent in the workload. This is depicted using the function $\mathcal{F}$, where $\mathcal{F}(0,1)$ returns a random number between 0 and 1. This workload is then executed using the \textit{wrk2} generator similar to listing \ref{lst:workload-gen-example} to apply the HTTP load on the micro-service.
 
 \begin{algorithm}
-    \caption{IoT workload generation algorithm}
+    \caption{IoT daily workload generation}
     \label{alg:work-gen}
+    \textbf{Input}: $offset,\,night\_workload,\,day\_workload$\\
+    \textbf{Output}: $workload$
     \begin{algorithmic}
-        \State $offset \gets \alpha$
-        \State $night\_workload \gets \omega$
-        \State $day\_workload \gets [ \delta_1, \delta_2, ... , \delta_{18}]$
-        \While{True}
-            \For {i $\leftarrow$ 0 ... 6}
-                \State $result \gets generate(night\_workload + \mathcal{F}(-offset,offset)$
-            \EndFor
-            \For {i $\leftarrow$ 0 ... 18}
-                \State $result \gets generate(day\_workload[i] + \mathcal{F}(-offset,offset)$
-            \EndFor
-        \EndWhile
+        \For {$\eta_{i} \leftarrow night\_workload$}
+            \State $workload \gets generate(\eta_{i} + \mathcal{F}(-offset,offset)$
+        \EndFor
+        \For {$\delta_{i} \leftarrow day\_workload$}
+            \State $workload \gets generate(\delta_{i} + \mathcal{F}(-offset,offset)$
+        \EndFor
+        \State \Return $workload$
     \end{algorithmic}
 \end{algorithm}
 
@@ -127,7 +125,7 @@ get('/metrics', async (req, res) => {
 \end{lstlisting}
 %TC:endignore
 
-To facilitate the export of Jaeger metrics to Prometheus, a custom deployment was created which scrapes these metrics at periodic and frequent time intervals, and pushes it to Prometheus. The deployment, which was named ``Jaeger-Scraper'', was a JavaScript express server set up on Kubernetes using Docker, and the server code was implemented as shown in listing \ref{lst:jaeger-scraper}. The server uses the open source NPM library ``prom-client''\footnote{\url{https://github.com/siimon/prom-client}} to create a Prometheus Gauge. A gauge is an extension of the Prometheus metric counter, the primary difference being that it can be both increased or decreased, whereas the counter can only be incremented. When Kubernetes requests metric data from the Jaeger-Scraper API endpoint, the scraper gets the latest Jaeger metrics within a fixed window in milliseconds, and calculates the average latency of the time period. This value is then ready to be pushed to the Prometheus database.
+To facilitate the export of Jaeger metrics to Prometheus, a custom deployment was created which scrapes these metrics at periodic and frequent time intervals, and pushes it to Prometheus. The deployment, which was named \textit{Jaeger-Scraper}, was a JavaScript express server set up on Kubernetes using Docker, and the server code was implemented as shown in listing \ref{lst:jaeger-scraper}. The server uses the open source NPM library \textit{prom-client}\footnote{\url{https://github.com/siimon/prom-client}} to create a Prometheus Gauge. A gauge is an extension of the Prometheus metric counter, the primary difference being that it can be both increased or decreased, whereas the counter can only be incremented. When Kubernetes requests metric data from the Jaeger-Scraper API endpoint, the scraper gets the latest Jaeger metrics within a fixed window in milliseconds, and calculates the average latency of the time period. This value is then ready to be pushed to the Prometheus database.
 
 Once this server is deployed on the Kubernetes cloud layer, a service-monitor tool for Prometheus is written, which tells Kubernetes to invoke the GET API this server exposes at a set interval of time. It is through this API call that the latency value gets pushed to the Prometheus database. By default, the service-monitor calls the $/metrics$ endpoint, which is what the Jaeger-Scraper is configured with. For this thesis, this interval was set at 15 seconds, and the configuration is shown in listing \ref{lst:jaeger-scraper-svc-monitor}.
 
@@ -175,7 +173,7 @@ As mentioned above, the Kubernetes autoscaler is able to scale resources based o
 
 %TC:ignore
 \begin{lstlisting}[
-  caption={Prometheus adapter configmap},
+  caption={Prometheus adapter configmap for avg\_latency metric},
   captionpos=t,
   label={lst:prometheus-adapter-configmap},
   float=ht
@@ -206,7 +204,7 @@ The prometheus adapter requires a configuration map (ConfigMap) to translate Pro
     \item Querying - Finally, the Prometheus deployment is queried to get the actual metric values.
 \end{itemize}
 
-The hybrid autoscaler requires the default CPU metric, as well as the custom latency metric. Thus we define this additional metric for configuring in Kubernetes. Listing \ref{lst:prometheus-adapter-configmap} shows the discovery, association, naming, and querying steps to extract the average API latency. In the code snippet, the ``seriesQuery'' corresponds to discovery, ``resources'' to association, ``name'' to naming, and ``metricsQuery'' to querying.
+The hybrid autoscaler requires the default CPU metric, as well as the custom latency metric. Thus we define this additional metric for configuring in Kubernetes. Listing \ref{lst:prometheus-adapter-configmap} shows the discovery, association, naming, and querying steps to extract the average API latency. In the code snippet, the \textit{seriesQuery} corresponds to discovery, \textit{resources} to association, \textit{name} to naming, and \textit{metricsQuery} to querying.
 
 %TC:ignore
 \begin{lstlisting}[
@@ -255,9 +253,9 @@ Now, the Kubernetes custom metrics API exposes the following additional APIs und
 \subsection{Reactive Autoscaler}
 \label{subsec:reactive-auto-subsection}
 
-With the custom metrics now being exposed by Kubernetes, all the tools required for the reactive auto-scaling subsystem are in place. This will be built as an extension of the default Kubernetes horizontal pod autoscaler.\par
+With the custom metrics now being exposed by Kubernetes, all the tools required for the reactive auto-scaling subsystem were in place. This would be built as an extension of the default Kubernetes horizontal pod autoscaler.\par
 
-As discussed in subsection \ref{subsec:ch4-hybrid-arch}, the reactive autoscaler cool-down parameters must be set to a value that is not too small or large. For this experiment, the parameters of the autoscaler were modified by setting both the scale up and scale down cooldown values to 15 seconds, or one control loop, and maintain the toleration value at the default of 0.1. This ensures that reactive auto-scaling occurs as quickly as possible, to minimize SLA violations, while decreasing the chances of resources constantly being scaled up and down in a yo-yo manner \cite{sides2015yo}, which leads to unavailability of resources and drives up resource costs. Listing \ref{lst:reactive-cooldown-config} shows the configuration snippet of the reactive autoscaler provisioning tool to achieve this.\par
+As discussed in subsection \ref{subsec:ch4-hybrid-arch}, the reactive autoscaler cool-down parameters must be set to a value that is not too small or large. For this experiment, the parameters of the autoscaler were modified by setting both the scale up and scale down cooldown values to 15 seconds (equivalent to one control loop for the autoscaler controller), and maintain the toleration value at the default of 0.1. This means that if the controller sees that the autoscaler is requesting resource scaling for two consecutive control loops, it will proceed with the auto-scaling procedure. This ensures that reactive auto-scaling occurs as quickly as possible, to minimize SLA violations, while decreasing the chances of resources constantly being scaled up and down in an oscillating manner \cite{sides2015yo}, which leads to unavailability of resources and drives up resource costs. Listing \ref{lst:reactive-cooldown-config} shows the configuration snippet of the reactive autoscaler provisioning tool to achieve this.\par
 
 %TC:ignore
 \begin{lstlisting}[
@@ -292,7 +290,7 @@ The proactive algorithm \ref{alg:proactive-forecast-alg} was deployed on Kuberne
 
 %TC:ignore
 \begin{lstlisting}[
-  caption={Prometheus adapter configmap},
+  caption={Prometheus adapter configmap for forecasted\_cpu metric},
   captionpos=t,
   label={lst:prometheus-adapter-configmap-proactive},
   float=ht
@@ -307,7 +305,7 @@ The proactive algorithm \ref{alg:proactive-forecast-alg} was deployed on Kuberne
 \end{lstlisting}
 %TC:endignore
 
-The proactive forecaster was a deep-learning machine learning model, which consisted of three LSTM layers, alternated with two dropout layers. These dropout layers were used to prevent over-fitting of data during the training process. Finally, the last layer was a densely connected neural-network which generated the forecaster output in the required shape. For this experiment, the output was 540 data points, which was approximately the amount of data required to forecast 24 hours of workload. By doing so, the forecaster only needed to be run once a day, vastly reducing total training time. This was only possible due to the data pre-processing done before training. Table \ref{tab:lstm-layers} shows the detailed information about the forecaster model layers.\par
+The proactive forecaster was a deep-learning machine learning model configured with a multi step forecast output as discussed in section \ref{subsec:ch2-time-series-forecast-models}. The model consisted of three LSTM layers, alternated with two dropout layers. These dropout layers were used to prevent over-fitting of data during the training process. Finally, the last layer was a densely connected neural-network which generated the forecaster output in the required shape. For this experiment, the output was 540 data points, which was approximately the amount of data required to forecast 24 hours of workload. By doing so, the forecaster only needed to be run once a day, vastly reducing total training time. This was only possible due to the data pre-processing done before training. Table \ref{tab:lstm-layers} shows the detailed information about the forecaster model layers.\par
 
 %TC:ignore
 \begin{table}
@@ -412,7 +410,7 @@ The filtered data was then normalized to further remove the impact of scale betw
 \end{table}
 %TC:endignore
 
- It was experimentally discovered that a learning rate higher than the configured value reduced the prediction accuracy drastically, as the model was unable to find the optimal loss value during training, becoming stuck in a local minima. Furthermore, attempting to alleviate this issue by increasing training epochs to over 200 resulted in severe over-fitting, devaluing the algorithm for generalized workloads. Thus the hyper-parameters were chosen in such a way that they minimized training time and over-fitting, while maximizing prediction accuracy within the constraints of limited edge layer resources. To further reduce over-fitting, an additional function known as ``early-stop'' was defined which halted the training of the model if the loss did not decrease for 10 consecutive training epoch iterations. Lastly, an Adaptive Moment Estimation (Adam) optimizer \cite{diederik2014adam} was used in an attempt to generate the highest accuracy in the least amount of time. These parameters were determined based on the research experiments conducted by Siami-Namini \textit{et al}. \cite{siami2018comparison}.\par
+ It was experimentally discovered that a learning rate higher than the configured value reduced the prediction accuracy drastically, as the model was unable to find the optimal loss value during training, becoming stuck in a local minima. Furthermore, attempting to alleviate this issue by increasing training epochs to over 200 resulted in severe over-fitting, devaluing the algorithm for generalized workloads. Thus the hyper-parameters were chosen in such a way that they minimized training time and over-fitting, while maximizing prediction accuracy within the constraints of limited edge layer resources. To further reduce over-fitting, an additional function known as \textit{early-stop} was defined which halted the training of the model if the loss did not decrease for 10 consecutive training epoch iterations. Lastly, an Adaptive Moment Estimation (Adam) optimizer \cite{diederik2014adam} was used in an attempt to generate the highest accuracy in the least amount of time. These parameters were determined based on the research experiments conducted by Siami-Namini \textit{et al}. \cite{siami2018comparison}.\par
 
 \begin{center}
     \captionof{figure}{Loss and root mean squared error per training epoch}
@@ -446,7 +444,7 @@ The filtered data was then normalized to further remove the impact of scale betw
     \end{tikzpicture}
 \end{center}
 
-Figure \ref{fig:loss-mse-training} shows how the loss and root mean squared error of the model decreased with respect to the training epochs. The loss dropped drastically for the first 25 epochs, before reducing gradually until the $60^{th}$ epoch. From there on until the end of training, the loss value plateaued, making the limited gains too costly in terms of training time. From this, the choice of 75 epochs for the model training was justified.\par
+Figure \ref{fig:loss-mse-training} shows how the loss and root mean squared error of the model decreased with respect to the training epochs. The loss dropped drastically for the first 25 epochs, before reducing gradually until the $65^{th}$ epoch. From there on until the end of training, the loss value plateaued, and even spiked in certain epochs, making the limited gains too costly in terms of training time. From this, the choice of 75 epochs for the model training was justified.\par
 
 A similar trend was seen in the weights and biases of the LSTM. Figure \ref{fig:bias-weight-training} shows how these values for the final dense layer changed over each epoch. In the first epoch, the biases were uniformly distributed, but slowly converge to a smaller value. Similarly, the dense layer weights were able to converge to the values with least loss in the final epoch.\par
 
@@ -462,7 +460,7 @@ A similar trend was seen in the weights and biases of the LSTM. Figure \ref{fig:
     \end{minipage}
 \end{figure}
 
-The model training, validation and error comparison with previous model performances took approximately 3 minutes, after which the model predicted the subsequent day's forecast. Figure \ref{fig:lstm-final-data} shows how this looked. The forecaster accurately depicted the initial peaks for the entire day, including the morning, afternoon, and evening. It is clear however, that the rest of the data points may not be as accurate. This is not a significant drawback for the hybrid model, as the reactive algorithm is capable of making minor adjustments to the resources, ensuring that the SLA compliance is maintained.
+The model training, validation and error comparison with previous model performances took approximately 3 minutes, after which the model predicted the subsequent day's forecast in under 10 seconds. Figure \ref{fig:lstm-final-data} shows how this looked. The forecaster accurately depicted the initial peaks for the entire day, including the morning, afternoon, and evening. It is clear however, that the rest of the data points may not be as accurate. This is not a significant drawback for the hybrid model, as the reactive algorithm is capable of making minor adjustments to the resources, ensuring that the SLA compliance is maintained.
 
 \begin{comment}
 \begin{figure}[htb]
@@ -509,7 +507,7 @@ The model training, validation and error comparison with previous model performa
 \subsection{Autoscaler Controller}
 \label{subsec:ch5-auto-daemon-subsection}
 
-The autoscaler controller stored a maximum of seven days of data for use by the proactive forecaster. Data that is too old is not very useful for a time-series model training on semi-predictable data \cite{greff2016lstm}, and only increases training time without adding much to the accuracy. This data was refreshed once every day to ensure that the latest data was always available to the hybrid autoscalers before training. Since training only took place once a day, the costly metric scraping operations done by the controller from the cloud layer could be reduced, thereby reducing the overall load on the network.\par
+The autoscaler controller stored a maximum of seven days of data for use by the proactive forecaster. Data that is too old is not particularly useful for a time-series model training on semi-predictable data, and only increases training time without adding much to the accuracy \cite{greff2016lstm}. This data was refreshed once every day to ensure that the latest data was always available to the hybrid autoscalers before training. Since training only took place once a day, the costly metric scraping operations done by the controller from the cloud layer could be reduced, thereby reducing the overall load on the network.\par
 
 The controller sent a training request to the proactive autoscaler once every night. The time is chosen so that, due to the comparatively low amounts of user requests, the training process would be able to claim as much of the edge resources as possible without affecting the network availability. However, before sending the request, the controller computed whether or not an SLA violation took place in the past 24 hours. If it detected a violation, it assumed that the forecaster had not learnt enough of the time-series features to make an accurate prediction. This could be due to a variety of reasons such as lack of training data or conservative parameter values. To counteract this, the controller performed the following corrections:
 

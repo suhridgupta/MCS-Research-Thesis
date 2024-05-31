@@ -7,7 +7,7 @@
 \chapter{\chaptertitle}
 \label{ch:lit-review}
 
-In this chapter, we discuss some of the common challenges and limitations inherent in an edge computing paradigm in section \ref{sec:ch3-edge-issues}, before delving into the many attempts at mitigating them. Sections \ref{sec:ch3-reactive-solutions}, \ref{sec:ch3-proactive-solutions}, and \ref{sec:ch3-hybrid-solutions} comprise of a detailed literature review of the state-of-the-art auto-scaling algorithms and a comparison of their performances and drawbacks.
+In this chapter, we discuss some of the common implementation strategies for edge computing paradigms in section \ref{sec:ch3-edge-implementation} before discussing the inherent challenges and limitations in section \ref{sec:ch3-edge-issues}. Sections \ref{sec:ch3-reactive-solutions}, \ref{sec:ch3-proactive-solutions}, and \ref{sec:ch3-hybrid-solutions} comprise of a detailed literature review of the state-of-the-art auto-scaling algorithms used to mitigate these challenges, and a comparison of their performances and drawbacks.
 
 \section{Edge Computing Implementation}
 \label{sec:ch3-edge-implementation}
@@ -44,28 +44,28 @@ Finally, Salman \textit{et al}. \cite{salman2015edge} demonstrated an integratio
 
 Cao \textit{et al}. \cite{cao2020overview} demonstrated the key differentiations traditional cloud computing architectures have compared to edge architectures, while asserting that edge deployments remain an extension of the cloud. The aim of cloud computing infrastructures is to process huge amounts of data from multi-regional zones, or in the best case, globally. This is done so as to perform in-depth analysis in diverse fields such as health-care, robotics, and business decision making. Traditionally, they also dealt with non-real-time data for decision-making \cite{premsankar2018edge}. On the other hand, edge computing usually handles smaller scale data, locally clustered and isolated in separate zones, and highly real-time in nature \cite{mishra2020early}. The data processed in traditional cloud computing environments are also generally done using a high network bandwidth. This is due to the large distances data needs to be transmitted over to reach the data centres and cloud servers. Such data transmission places an enormous burden on the cloud network, and poses multiple security challenges in ensuring that the data is not compromised in transit.\par
 
-The real-time nature of edge computing applications necessitates a method of resource allocation which ensures minimal cost of deployment, and maximum efficiency in terms of performance. As mentioned in section \ref{sec:ch1-edge-arch}, micro-service container orchestration technologies are leveraged to achieve these aims. Kristiani \textit{et al}. \cite{kristiani2019} demonstrated an edge computing architecture, where the edge layer consists of Kubernetes nodes. Such a deployment increases the scalability, as well as maintains the ease of deployment, upgrade, and removal of nodes in the edge layer. Scaling of resources through the means of auto-scaling depending on the resource requirements is crucial to the architecture's performance. Default solutions such as the inbuilt autoscaler provided by Kubernetes, while generally useful for cloud applications, are unsuitable for edge architectures according to Phan \textit{et al}. \cite{phan2022traffic}. They note that due to the algorithm's default nature to allocate resources in a round-robin manner, they do not take into account which Kubernetes nodes require resources the most, violating edge architecture paradigms.
+The real-time nature of edge computing applications necessitates a method of resource allocation which ensures minimal cost of deployment, and maximum efficiency in terms of performance. As mentioned in section \ref{sec:ch1-edge-arch}, micro-service container orchestration technologies are leveraged to achieve these aims. Kristiani \textit{et al}. \cite{kristiani2019} demonstrated an edge computing architecture, where the edge layer consists of Kubernetes nodes. Such a deployment increases the scalability, as well as maintains the ease of deployment, upgrade, and removal of nodes in the edge layer. Scaling of resources through the means of auto-scaling depending on the resource requirements is crucial to the architecture's performance. Default solutions such as the inbuilt autoscaler provided by Kubernetes, while generally useful for cloud applications, are unsuitable for edge architectures according to Phan \textit{et al}. \cite{phan2022traffic}. They note that due to the algorithm's default nature to allocate resources in a round-robin manner, they do not take into account which Kubernetes nodes require priority resources allocation, violating edge architecture paradigms.
 
 \subsection{Cold start problem}
 \label{subsec:ch3-cold-start}
 
-To explain the cold start problem, we use the example of horizontal pod auto-scaling in Kubernetes. When the control plane requests for a deployment to be scaled up, Kubernetes adds more pods to the dataplane nodes.  Based on the internal workload, the pod needs to be elastically scaled out \cite{beni2021reducing}. Even though the pod start up time is significantly quicker than, say, a traditional virtual machine, there is a latency inherent to bootstrapping the container, preparing the pod environment based on the deployment specification, and initialising the code present in the container image, and registering the pod in a ``ready'' state to the Kubernetes control plane. This latency inherent when scaling resources is known as the ``cold start''.\par
+To explain the cold start problem, we use the example of horizontal pod auto-scaling in Kubernetes. When the control plane requests for a deployment replica to be scaled up, Kubernetes adds more pods to the data plane nodes.  Based on the internal workload, the pod needs to be elastically scaled out \cite{beni2021reducing}. Even though the pod start up time is significantly quicker than, say, a traditional virtual machine, there is a latency inherent to bootstrapping the container, preparing the pod environment based on the deployment specification, and initialising the code present in the container image, and registering the pod in a ``ready'' state to the Kubernetes control plane.\par
 
-Several techniques exist to reduce this cold start latency. The Kubernetes container runtime uses snapshots \cite{cadden2019seuss}, lazy fetching of container images \cite{lorenzo2019fogdocker}, and container queues \cite{lin2019mitigating}. However, these measures do not eliminate the issue of cold start. Due to this, researchers looked into scaling resources in a predictive manner, so as to ensure the micro-service application has enough time to spool up resources before the actual demand comes in.\par
+Several techniques exist to mitigate this resource latency. The Kubernetes container runtime uses snapshots \cite{cadden2019seuss}, lazy fetching of container images \cite{lorenzo2019fogdocker}, and container queues \cite{lin2019mitigating}. However, these measures do not eliminate the issue of the inherent latency in installing and registering the resource. Due to this, researchers looked into scaling resources in a predictive manner, so as to ensure the micro-service application has enough time to spool up resources before the actual demand comes in. This process, by which resources are created and registered with the container orchestration before the expected workload is known as resource \textit{cold start}.\par
 
 \subsection{SLA Guarantees}
 \label{subsec:ch3-sla-edge}
 
 There are several challenges posed in providing SLA guarantees in an edge deployment:
 \begin{itemize}
-    \item Users queueing for large periods of time to use a service \cite{venticinque2011cloud}
-    \item Degradation of application performance due to peak levels of workload, leading to user dissatisfaction \cite{sakr2012sla}
-    \item Incorrect resources being allocated to the application, leading to either a degradation of availability, or large cost of application deployment \cite{houlihan2014auditing}
+    \item Users queueing for large periods of time to use a service \cite{venticinque2011cloud}.
+    \item Degradation of application performance due to peak levels of workload, leading to user dissatisfaction \cite{sakr2012sla}.
+    \item Incorrect resources being allocated to the application, leading to either a degradation of availability, or large cost of application deployment \cite{houlihan2014auditing}.
 \end{itemize}
 
 Several strategies have been proposed to counteract these challenges. Linlin \textit{et al}. \cite{wu2013sla} proposed a customer-driven strategy  to minimize the provisioning costs. The algorithm considers the customer profiles as well as cloud providers' quality parameters such as response time to dynamically handle customer requests. Rajkumar \textit{et al}. \cite{rajavel2012achieving} proposed a solution for alleviating the issue of delay in service allocation to users through the use of a novel hierarchical scheduling algorithm. This algorithm increases the performance of the scheduling algorithm, thus reducing the wastage of resources, and minimizing wait times. Sakr \textit{et al}. \cite{sakr2012sla} introduced a novel approach to combat application performance degradation by using a middleware between consumers and the cloud. This middleware helps to facilitate dynamic provisioning of cloud databases based on consumer requirements, tailoring their needs and requirements to mitigate peak usages being hit often.
 
-\section{Resource Management and Scheduling Survey}
+\section{Scheduling Strategies}
 \label{sec:ch3-resource-schedule-solutions}
 
 To counteract the limitations discussed in section \ref{subsec:ch3-edge-resource-alloc}, several custom scheduling and resource management algorithms have been proposed for edge architectures.\par
@@ -76,9 +76,9 @@ Based on these initial proposals, Nguyen \textit{et al}. \cite{nguyen2020elastic
 
 Wojciechowski \textit{et al}. \cite{wojciechowski2021netmarks} proposed a similar extension to the Kubernetes scheduler which deployed traffic-aware provisioning of resources. The extension worked alongside the Istio Service Mesh \footnote{\url{https://istio.io/latest/about/service-mesh/}} to collect dynamic network metrics for the scheduling of resources. The algorithm was shown to have highly efficient uses for edge deployments such as the 5G network.\par
 
-While these proposals improved the scheduling and resource provisioning of edge deployments, they did not address key limitations addressed above such as the need for dynamic resource scaling so as to face the challenges of real-time data processing and SLA compliance. Due to these issues, several auto-scaling algorithms were proposed to address them.
+While these proposals improved the scheduling and resource provisioning of edge deployments, they did not address key limitations addressed above such as the need for dynamic resource scaling so as to face the challenges of real-time data processing and SLA compliance. Due to these issues, several auto-scaling algorithms extending the design principles of these resource scheduling algorithms were proposed to address them.
 
-\section{Reactive Autoscaling Survey}
+\section{Reactive Auto-scaling Strategies}
 \label{sec:ch3-reactive-solutions}
 
 Nunes \textit{et al}. \cite{nunes2021state} stated that horizontal pod auto-scaling using a reactive strategy remains the most popular auto-scaling technique, as well as research topic. These strategies, despite having limitations such as a reliance on predetermined resource thresholds and a delay in resource scaling, have been popular in research articles.  Dogani \textit{et al}. \cite{dogani2023auto} stated that this was due to the simplicity and user-friendliness in developing them. Table \ref{tab:reactive-autoscalers} summarizes the reactive auto-scaling algorithms discussed below:\par
@@ -142,16 +142,16 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
          Simple deployment & \cmark & \xmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark\\
          Simple parameter tuning & \cmark & \xmark & \cmark & \xmark & \cmark & \cmark & \cmark & \xmark\\
          Custom metrics & \xmark & \xmark & \xmark & \xmark & \xmark & \cmark & \cmark & \xmark\\
-         Light-weight & \cmark & \cmark & \cmark & \cmark & \xmark & \xmark & \xmark & \cmark\\
+         Light-weight deployment & \cmark & \cmark & \cmark & \cmark & \xmark & \xmark & \xmark & \cmark\\
          Edge architecture compliant & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark\\
          SLA-compliant & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
-         Maximizes app performance &  \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
+         Minimizes deployment cost &  \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
          \hline
     \end{tabular}
 \end{table}
 %TC:endignore
 
-\section{Proactive Autoscaling Survey}
+\section{Proactive Auto-scaling Strategies}
 \label{sec:ch3-proactive-solutions}
 
 Lorido \textit{et al}. \cite{lorido2014review} showed that compared to reactive algorithms, proactive algorithms achieved better resource allocation once they had been carefully optimized. Machine learning (ML) techniques such as auto-regressive integrated moving averages (ARIMA) and long short-term memory (LSTM) have gained populary in time-series analysis due to their relative ease of building and efficiency compared to other ML models. Through the careful use of these models, linear patterns in the data can be automatically identified in a short amount of time with relatively constrained resources. There are however several challenges when implementing a proactive algorithm. Time-series analysis models may struggle when dealing with highly complex and non-linear data \cite{dogani2023auto}. The development of a generalised algorithm for several edge architectures remains a costly process. One of the biggest challenges is the initial lack of training data. Another issue is the exploding or vanishing gradient problem \cite{pascanu2013difficulty}, though modern algorithms ensure that they avoid this pitfall \cite{hochreiter2001gradient}. Despite these challenges, their application in scaling of resources with semi-predictable data series remain valuable. Table \ref{tab:proactive-autoscalers} summarizes the proactive auto-scaling algorithms discussed below:\par
@@ -202,16 +202,16 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
          Simple deployment &            \xmark & \cmark & \cmark & \cmark & \cmark & \cmark\\
          Simple parameter tuning &      \xmark & \xmark & \xmark & \cmark & \xmark & \xmark\\
          Custom metrics &               \cmark & \cmark & \xmark & \xmark & \xmark & \xmark\\
-         Light-weight &                 \xmark & \xmark & \xmark & \cmark & \xmark & \xmark\\
+         Light-weight deployment &      \xmark & \xmark & \xmark & \cmark & \xmark & \xmark\\
          Edge architecture compliant &  \cmark & \xmark & \xmark & \xmark & \xmark & \xmark\\
          SLA-compliant &                \xmark & \cmark & \cmark & \cmark & \xmark & \xmark\\
-         Maximizes app performance &    \xmark & \xmark & \cmark & \xmark & \xmark & \xmark\\
+         Minimizes deployment cost &    \xmark & \xmark & \cmark & \xmark & \xmark & \xmark\\
          \hline
     \end{tabular}
 \end{table}
 %TC:endignore
 
-\section{Hybrid Autoscaling Survey}
+\section{Hybrid Auto-scaling Strategies}
 \label{sec:ch3-hybrid-solutions}
 
 All the approaches mentioned in sections \ref{sec:ch3-reactive-solutions} and \ref{sec:ch3-proactive-solutions} have their benefits and drawbacks. Thus, hybrid solutions which merge multiple auto-scaling methods were proposed \cite{qu2018auto}. While hybrid algorithms for cloud-based deployments exist, integrating them into edge architectures pose several challenges due to the lower data storage and computational capacity of the edge layer. Furthermore, extracting the proactive time-series analysis to the cloud layer poses further challenges due to the inherent latency present between the two layers. Despite this, exploring these solutions provides a solid template for the approach used in this paper, table \ref{tab:hybrid-autoscalers} shows an overview of the proposals discussed below:\par
@@ -264,10 +264,10 @@ Ref & Technique & Scaling Metrics & Contributions & Limitations\\
          Simple deployment &            \cmark & \cmark & \cmark & \cmark & \cmark & \cmark\\
          Simple parameter tuning &      \cmark & \cmark & \cmark & \xmark & \xmark & \cmark\\
          Custom metrics &               \cmark & \xmark & \xmark & \cmark & \cmark & \cmark\\
-         Light-weight &                 \cmark & \xmark & \cmark & \xmark & \xmark & \cmark\\
+         Light-weight deployment &      \cmark & \xmark & \cmark & \xmark & \xmark & \cmark\\
          Edge architecture compliant &  \xmark & \xmark & \xmark & \xmark & \xmark & \cmark\\
          SLA-compliant &                \xmark & \xmark & \cmark & \cmark & \cmark & \cmark\\
-         Maximizes app performance &    \xmark & \xmark & \xmark & \xmark & \cmark & \cmark\\
+         Minimizes deployment cost &    \xmark & \xmark & \xmark & \xmark & \cmark & \cmark\\
          \hline
     \end{tabular}
 \end{table}
