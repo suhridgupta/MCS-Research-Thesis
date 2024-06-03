@@ -1,5 +1,14 @@
 \documentclass[a4paper, 11pt, oneside]{Thesis}
 
+\makeatletter
+\def\FirstLetterUppercase#1{\expandafter\FirstLetterUppercase@i#1 \@nil}
+\def\FirstLetterUppercase@i#1#2 #3\@nil{%
+  \MakeUppercase{#1}#2
+  \ifx\relax#3\relax\def\next@i{}\else\def\next@i{\expandafter\FirstLetterUppercase@i#3\@nil}\fi%
+  \next@i}
+
+\newcommand{\hiddensection}[1]{\addtocontents{toc}{\SkipTocEntry}\section*{#1}} % easier version
+
 \usepackage[dvipsnames]{xcolor}
 
 \usepackage[utf8]{inputenc}
@@ -107,7 +116,7 @@
 \department{{School of Computing and Information Systems}}
 \school{{Faculty of Engineering and IT}}
 \degree{{Master of Computer Science}}
-\title{{Hybrid Horizontal Autoscaling for SLA Compliant Edge Computing Applications}}
+\title{{Enhanced SLA Compliance in Edge Computing Applications through Hybrid Proactive-Reactive Autoscaling}}
 \shortauthors{{Suhrid Gupta}}
 \authors{
   \texorpdfstring{\href{mailto:suhrid.gupta@student.unimelb.edu.au}{\shortauthornames}}{\shortauthornames}\\

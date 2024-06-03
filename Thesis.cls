@@ -257,14 +257,14 @@
 }
 
 \newcommand\Preface[1]{
-  \btypeout{Preface}
-  \addtotoc{Preface}
+  \btypeout{Preface and Publications}
+  \addtotoc{Preface and Publications}
   \addtocontents{toc}{\vspace{1em}}
   \thispagestyle{plain}
   \null\vfil
   %\vskip 60\p@
   \begin{center}
-    {\huge\bf Preface\par}
+    {\huge\bf Preface and Publications\par}
   \end{center}
   %\vskip 60\p@
   {\normalsize #1}
