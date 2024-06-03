@@ -77,8 +77,8 @@ Container orchestration allows the micro-service application to customize how th
 \subsection{Kubernetes Architecture}
 \label{subsec:ch2-k8s-overview}
 
-Kubernetes~\footnote{\url{https://kubernetes.io/}} is one of the most popular open-source container orchestration platforms~\cite{vayghan2019kubernetes}. Initially referred to as ``Borg'', the project was used internally at Google to deploy the majority of their cloud applications before becoming an open-source application~\cite{burns2016borg}. Figure~\ref{fig:k8s-arch} shows the high-level architecture. The Kubernetes deployment has a controller / worker architecture. The nodes in the Kubernetes cluster are split into either \textit{control plane nodes} and \textit{data plane nodes}. The \textit{control plane nodes} have a collection of processes which help monitor and maintain the desired state of the deployment. The \textit{data plane nodes} contain processes which run the containers doing the actual work, and are managed by the control plane.\par
-The smallest unit of work in a Kubernetes deployment is known as a \textit{pod}~\cite{baier2017getting}. This is a collection of containers sharing an IP address and port. In summary, micro-service architectures are said to be containerized and deployed on Kubernetes in the form of pods~\cite{vayghan2019kubernetes}.\par
+Kubernetes~\footnote{\url{https://kubernetes.io/}} is one of the most popular open-source container orchestration platforms~\cite{vayghan2021kubernetes}. Initially referred to as ``Borg'', the project was used internally at Google to deploy the majority of their cloud applications before becoming an open-source application~\cite{burns2016borg}. Figure~\ref{fig:k8s-arch} shows the high-level architecture. The Kubernetes deployment has a controller / worker architecture. The nodes in the Kubernetes cluster are split into either \textit{control plane nodes} and \textit{data plane nodes}. The \textit{control plane nodes} have a collection of processes which help monitor and maintain the desired state of the deployment. The \textit{data plane nodes} contain processes which run the containers doing the actual work, and are managed by the control plane.\par
+The smallest unit of work in a Kubernetes deployment is known as a \textit{pod}~\cite{baier2017getting}. This is a collection of containers sharing an IP address and port. In summary, micro-service architectures are said to be containerized and deployed on Kubernetes in the form of pods~\cite{vayghan2021kubernetes}.\par
 \begin{figure}[htb]
     \centering
     \caption{Overview of Kubernetes architecture}
@@ -116,7 +116,7 @@ Apart from intelligently scheduling pods to data plane nodes, Kubernetes has the
 
 \textit{Horizontal pod auto-scaling} is the most commonly used auto-scaling strategy~\cite{baresi2021kosmos}. It modifies the number of pods assigned to a task, based on the resources being requested. Kubernetes implements this using a periodic control loop which runs every 15 seconds by default. The control manager compares the actual resource utilization with the target utilization defined by the deployment script, and scales the number of pods accordingly.
 
-\subsection{Custom Auto-scaling}
+\subsection{Autoscaling Using Custom Metrics}
 \label{subsec:ch2-custom-auto-scaling}
 
 \begin{figure}[htb]
@@ -173,7 +173,7 @@ Using this current state value, the output can be calculated using the equation:
 
 Where $W_{y}$ is the output weight.\par
 
-RNN also employs a back-propagation algorithm during training. However, the parameters are used by all the network states $h_{i}; i \in \{1, 2, ... , n\}$. However, RNN training encounters two big issues, namely the vanishing and exploding gradients. These issues hinder the accuracy of predictions. If the training sequence is too long, the RNN has a difficult time carrying previous information from one training iteration to the next. To address this issue, an improved version of RNNs was created, known as LSTM.\par
+RNN also employs a back-propagation algorithm during training. However, the parameters are used by all the network states $h_{i}; i \in \{1, 2, ... , n\}$. However, RNN training encounters two big issues, namely the vanishing and exploding gradients, which hinder the accuracy of predictions. If the training sequence is too long, the RNN has a difficult time carrying previous information from one training iteration to the next, due to the exponential nature of the weight updates during back-propagation which causes its values to become extremely small or large. To address this issue, an improved version of RNNs was created, known as LSTM.\par
 
 Long Short-Term Memory or LSTM is a deep learning model which is enhanced from the traditional RNN architecture~\cite{lindemann2021survey}. In an RNN function, the hidden state activation is influenced by nearby activation functions. This is known as the ``short-term'' memory. Meanwhile the overall network weights are influenced by the computations which occur over the entire long data sequence.\par
 
@@ -184,9 +184,9 @@ Long Short-Term Memory or LSTM is a deep learning model which is enhanced from t
     \label{fig:lstm-cell-architecture}
 \end{figure}
 
-LSTMs are designed in a way which avoids the long-term dependency problem by integrating a cell state into the architecture. The cell state acts as a conveyor belt of information, allowing information to be passed along the different data sequences easily. Information is added to or removed from the cell state using structures known as gates. These gates are created from a sigmoid layer, and a point-wise multiplication operation. The LSTM architecture has three gates for performing cell state operations. These are the ``Forget gate'', ``Input gate'', and ``Output gate''. Figure~\ref{fig:lstm-cell-architecture} shows the structure of these cell state operations.\par
+LSTMs are designed in a way which avoids the long-term dependency problem by integrating a cell state into the architecture. The cell state acts as a conveyor belt of information, allowing information to be passed along the different data sequences easily. Information is added to or removed from the cell state using structures known as gates. These gates are created from a sigmoid layer, and a point-wise multiplication operation. The LSTM architecture has three gates for performing cell state operations. These are the \textit{Forget gate}, \textit{Input gate}, and \textit{Output gate}. Figure~\ref{fig:lstm-cell-architecture} shows the structure of these cell state operations.\par
 
-The forget gate determines the amount of past information the LSTM should retain. This decision is made through the use of a sigmoid function, and the gate output $f_{t}$ is given through the equation:
+The \textit{forget gate} determines the amount of past information the LSTM should retain. This decision is made through the use of a sigmoid function, and the gate output $f_{t}$ is given through the equation:
 
 \begin{equation}
     f_{t} = \sigma(W_{f}\cdot[h_{t-1}, x_{t}] + b_{f})
@@ -194,7 +194,7 @@ The forget gate determines the amount of past information the LSTM should retain
 
 Where $W$ is the gate neuron weight, and $b_{x}$ is the gate bias.\par
 
-The input gate determines how information is added to the cell state. This is done through the following steps:
+The \textit{input gate} determines how information is added to the cell state. This is done through the following steps:
 \begin{itemize}
     \item Determine the values $i_{t}$ to be added:
     \begin{equation}
@@ -211,7 +211,7 @@ The input gate determines how information is added to the cell state. This is do
     \end{equation}
 \end{itemize}
 
-Finally, the output gate determines which portion of the current cell state is included in the output. This is determined using three steps:
+Finally, the \textit{output gate} determines which portion of the current cell state is included in the output. This is determined using three steps:
 \begin{itemize}
     \item Create vector $o_{t}$ which scales the cell state value between -1 and +1:
     \begin{equation}

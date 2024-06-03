@@ -80,7 +80,7 @@ Wojciechowski \textit{et al}.~\cite{wojciechowski2021netmarks} proposed a simila
 
 While these proposals improved the scheduling and resource provisioning of edge deployments, they did not address key limitations addressed above such as the need for dynamic resource scaling so as to face the challenges of real-time data processing and SLA compliance. Due to these issues, several auto-scaling algorithms extending the design principles of these resource scheduling algorithms were proposed to address them.
 
-\section{Reactive Auto-scaling Strategies}
+\section{Reactive Autoscaling Strategies}
 \label{sec:ch3-reactive-solutions}
 
 %TC:ignore
@@ -123,7 +123,7 @@ Taherizadeh and Stankovski~\cite{taherizadeh2019dynamic} proposed a multi-level 
 
 Phan \textit{et al}.~\cite{phan2022traffic} proposed a reactive auto-scaling solution for edge deployments for IoT devices which dynamically allocates resources based on incoming traffic. This traffic-aware horizontal pod autoscaler (THPA) operates on top of the underlying Kubernetes architecture. As discussed above, the default Kubernetes horizontal pod autoscaler scales resources in a round-robin manner, not taking into context which nodes are receiving the highest resource requests. THPA alleviates this issue by modelling the resource requests per Kubernetes nodes. It then intelligently allocates pods to the nodes with higher number of requests. The authors were able to experimentally demonstrate that following such an approach provided a 150\% improvement in response time and throughput. However the algorithm is not SLA compliant due to the delay in scaling resources in a reactive manner.
 
-\section{Proactive Auto-scaling Strategies}
+\section{Proactive Autoscaling Strategies}
 \label{sec:ch3-proactive-solutions}
 
 %TC:ignore
@@ -162,7 +162,7 @@ Abdulla \textit{et al}.~\cite{abdullah2020burst} devised an auto-scaling solutio
 
 Alidoost \textit{et al}.~\cite{alidoost2023introducing} proposed a workload classification model using a Support Vector Machine (SVM). The algorithm extracts the user's workload characteristics, and then trains the SVM on it. The authors demonstrated a 10\% forecast error reduction compared to other machine learning proactive forecast approaches. The SVM however struggles to identify boundaries for complex data, making this algorithm unsuitable for non-linear workload patterns.\par
 
-\section{Hybrid Auto-scaling Strategies}
+\section{Hybrid Autoscaling Strategies}
 \label{sec:ch3-hybrid-solutions}
 
 %TC:ignore

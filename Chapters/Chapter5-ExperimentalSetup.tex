@@ -139,7 +139,7 @@ Once this server is deployed on the Kubernetes cloud layer, a service-monitor to
 
 %TC:ignore
 \begin{lstlisting}[
-  caption={\textit{Jaeger-Scraper} service monitor},
+  caption={\textit{Jaeger-Scraper} service monitor for Prometheus},
   captionpos=t,
   label={lst:jaeger-scraper-svc-monitor},
   float=ht
@@ -164,7 +164,7 @@ With the service-monitor deployed, the scraped values were now visible when quer
 
 %TC:ignore
 \begin{lstlisting}[
-  caption={\textit{Jaeger-Scraper} metrics collector},
+  caption={\textit{Jaeger-Scraper} metrics collector example},
   captionpos=t,
   label={lst:jaeger-scraper-metric},
   float=ht
@@ -531,7 +531,7 @@ The model training, validation and error comparison with previous model performa
 The autoscaler controller stored a maximum of seven days of data for use by the proactive forecaster. Data that is too old is not particularly useful for a time-series model training on semi-predictable data, and only increases training time without adding much to the accuracy~\cite{greff2016lstm}. This data was refreshed once every day to ensure that the latest data was always available to the hybrid autoscalers before training. Since training only took place once a day, the costly metric scraping operations done by the controller from the cloud layer could be reduced, thereby reducing the overall load on the network.\par
 
 The controller sent a training request to the proactive autoscaler once every night. The time is chosen so that, due to the comparatively low amounts of user requests, the training process would be able to claim as much of the edge resources as possible without affecting the network availability. However, before sending the request, the controller computed whether or not an SLA violation took place in the past 24 hours. If it detected a violation, it assumed that the forecaster had not learnt enough of the time-series features to make an accurate prediction. This could be due to a variety of reasons such as lack of training data or conservative parameter values. To counteract this, the controller performed the following corrections:
-
+\enlargethispage{\baselineskip}
 \begin{itemize}
     \item $learning\_rate$ was decreased by 0.0005, to a minimum value of 0.002.
     \item $epochs$ was increased by 5, to a maximum of 100.
